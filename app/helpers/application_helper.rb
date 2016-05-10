@@ -21,6 +21,8 @@ require 'forwardable'
 require 'cgi'
 
 module ApplicationHelper
+  require 'pullreview/coverage_reporter'
+  PullReview::CoverageReporter.start
   include Redmine::WikiFormatting::Macros::Definitions
   include Redmine::I18n
   include GravatarHelper::PublicMethods
