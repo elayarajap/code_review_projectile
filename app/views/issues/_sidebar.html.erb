@@ -1,0 +1,34 @@
+
+<h3><%= l(:label_issue_plural) %></h3>
+<div class="rightSideBarInnerContent marginLeftZero">
+	<ul id="bugsRightSideUl">
+		<% if params["tid"] == "2" %>
+			<li><%= link_to "View open tasks", _project_issues_path(@project, :set_filter => 1, :tid => params["tid"]),:class=>'openTask' %></li>
+			<li><%= link_to "View closed tasks", _project_issues_path(@project, :set_filter => 1, :status_id => "c", :tid => params["tid"]),:class=>'closedTask' %></li>
+			<li><%= link_to "View all tasks", _project_issues_path(@project, :set_filter => 1, :status_id => "*", :tid => params["tid"]),:class=>'allTask' %></li>	
+		<% elsif params["tid"] == "1" %>
+			<li><%= link_to "View open bugs", _project_issues_path(@project, :set_filter => 1, :tid => params["tid"]),:class=>'openTask'  %></li>	
+			<li><%= link_to "View closed bugs", _project_issues_path(@project, :set_filter => 1, :status_id => "c", :tid => params["tid"]),:class=>'closedTask' %></li>
+			<li><%= link_to "View all bugs", _project_issues_path(@project, :set_filter => 1, :status_id => "*", :tid => params["tid"]),:class=>'allTask' %></li>
+	<% end %>
+	</ul>
+
+	<%= call_hook(:view_issues_sidebar_issues_bottom) %>
+	<%= call_hook(:view_issues_sidebar_planning_bottom) %>
+
+	<%= render_sidebar_queries %>
+	<%= call_hook(:view_issues_sidebar_queries_bottom) %>
+</div>
+
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+
+    $('#bugsRightSideUl li').live('click',function(){
+    	//$('#bugsRightSideUl li').removeClass('selected')
+    	$(this).addClass('selected');
+    })
+
+  });
+
+</script>

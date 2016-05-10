@@ -1,0 +1,31 @@
+<%= form_tag({ :controller => 'documents', :action => 'create_conversation', :id => @document }, :multipart => true) do %>
+<div class="box tabular">
+	
+<%= text_area_tag :comment, nil, :size=> "60x5" %>
+
+<%= link_to "Post", "javascript:void(0)",:class=> "greenBtn", :onclick => "postConversation('#{document_path(@document.id)}/create_conversation',$('#comment').val())" %>
+			
+</div>
+<% end %>
+
+<script type="text/javascript">
+$(document).ready(function(){
+	
+	$(".greenBtn").attr('disabled','disabled');
+	
+	$("#comment").keyup(function() {
+
+  	var commentval = $(this).val();
+	if(commentval!='')
+	{
+		$(".greenBtn").removeAttr('disabled');
+	}
+	else
+	{
+		$(".greenBtn").attr('disabled','disabled');
+	}
+
+	})
+
+})
+</script>

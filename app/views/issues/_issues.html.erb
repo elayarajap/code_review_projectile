@@ -1,0 +1,172 @@
+<% if @issues.empty? %>
+<p class="nodata"><%= l(:label_no_data) %></p>
+<% else %>
+<%= render :partial => 'issues/list', :locals => {:issues => @issues, :query => @query} %>
+<p class="pagination"><%= pagination_links_full @issue_pages, @issue_count %></p>
+<% end %>
+
+<script type="text/javascript">
+  jQuery(document).ready(function($) {
+
+    var tid = <%= params['tid']%>
+
+    $("#add_filter_select option:selected").text("Add Filters");
+    $("#add_filter_select option:selected").attr("disabled","disabled");
+
+
+
+    $("#add_filter_select option[value='status_id']").remove();
+    $("#add_filter_select option[value='tracker_id']").remove();
+    $("#add_filter_select option[value='fixed_version_id']").remove();
+
+
+
+    
+
+    if(tid == "2") {
+      $("#add_filter_select option[value='cf_6']").remove();
+      $("#tr_tracker_id,#tr_status_id .field label,#all_attributes label").hide();
+    }  
+    else{
+      $("#tr_tracker_id").hide();
+    }  
+
+    $("#issue_fixed_version_id option[value='']").remove();
+
+
+    //$(".subject").css("width","100%");
+
+    $(".assigned_to p").addClass("assigned_para");
+
+
+     var assigned = $(".assigned_to p").length;
+
+      for(p=0;p<assigned;p++)
+      {
+        if($(".assigned_to p:eq("+p+")").html() == "")
+        {
+      $(".assigned_to p:eq("+p+")").removeClass("assigned_para");
+    }
+    }
+
+    //$(".status").prevUntil("table").hide();
+ 
+    var stat = $(".status p").length;
+
+      for(l=0;l<stat;l++)
+      {
+        if($(".status p:eq("+l+")").html() == "Closed")
+        {
+      $(".status p:eq("+l+")").parent().prevAll(".stat").children().removeClass("open");
+      $(".status p:eq("+l+")").parent().nextAll(".subject").children().addClass("closedbug");
+    }
+    }
+
+    $(".status").hide();
+
+
+    var prior = $(".priority p").length;
+
+      for(k=0;k<prior;k++)
+      {
+         if($(".priority p:eq("+k+")").html() == "H")
+        {
+          //$(".priority p:eq("+k+")").css("color","red");
+          $(".priority p:eq("+k+")").addClass("high");
+        }
+        else if($(".priority p:eq("+k+")").html() == "L")
+        {
+         // $(".priority p:eq("+k+")").css("color","blue");
+         $(".priority p:eq("+k+")").addClass("low");
+        }
+        else
+         $(".priority p:eq("+k+")").addClass("normal");
+    }
+    
+    //$(".add-filter").hide();
+    $(".collapsible.collapsed").hide();
+    $("[id^='cb_']").hide();
+    $(".id p a").addClass("issueclr");
+
+    $('.addToInput').keyup(function(e){
+    $(".subdivcontent").show();  
+  });
+
+    $(document).on( "click", "html", function( event ) {
+    $('.subdivcontent').hide();
+        
+  });
+
+    $('.subdivcontent').click(function(e){
+      $(this).show();
+      e.stopPropagation();    
+    });
+
+    $(".stat").hide();
+
+  show_hide_dropdown();
+  clear_checkbox_and_select_box();
+  //Select all checkbox for issues
+  $('#selecctall').click(function(event) {  //on click 
+      if(this.checked) { // check select status
+          $('.issue_status_change input:checkbox').each(function() { //loop through each checkbox
+              if(this.disabled){                  
+              }else {                  
+                this.checked = true;  //select all checkboxes with class "issue_status_change"               
+                show_hide_dropdown();
+              }
+          });
+      }else{
+          $('.issue_status_change input:checkbox').each(function() { //loop through each checkbox
+              if(this.disabled){                  
+              }else {                  
+                this.checked = false;  //select all checkboxes with class "issue_status_change"               
+                show_hide_dropdown();
+              }
+          });         
+      }
+  });
+
+  // Change statuses for multiple issues at a time by selecting checkbox starts here.
+  $("#change_multiple_status").change(function() {
+    var issue_ids = new Array();
+    var status_url = $(this).attr("status_url")
+    var project_id = $(this).attr("project_id")
+    $(".issue_status_change input:checkbox:checked").each(function() {
+      issue_ids.push($(this).val());
+
+    });
+    var status = $( "#change_multiple_status").val();
+    if (issue_ids.length != 0)
+    {
+      $.ajax({
+        url: status_url,
+        type: 'POST',
+        data: {ids : issue_ids, project_id : project_id, issue : {status_id : status}},
+        beforeSend: function(){
+          //load_writter();
+        },
+        success: function(response){
+          window.location.reload();
+        },
+        complete: function(){
+          //load_completer();
+        }
+      });
+    }
+    else
+    {
+      alert("Please select atleast one issue to change status");
+      clear_checkbox_and_select_box();
+      show_hide_dropdown();
+    }
+  });
+
+  // Change statuses for multiple issues at a time by selecting checkbox ends here.
+  $(".issue_status_change input:checkbox").click(function() {
+    show_hide_dropdown();
+  });
+  show_hide_dropdown();
+  
+  });
+</script>

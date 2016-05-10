@@ -1,0 +1,71 @@
+<h2 class="title">Create New Meeting</h2>
+
+<div id="meeting">
+<div id="createMeeting">
+<%= form_tag({ :controller => 'projects', :action => 'create_meeting', :project_id => @project }, :method => :post) do %>
+<div class="box tabular">
+  <p>
+  	<%= select("","meeting_type_id", @meetingtype.collect {|p| [ p.name, p.id ] }) %>
+  	<%= text_field_tag 'title' %>
+  	<%= text_field_tag 'discussion_summary' %>
+  	<input id="txt_datetime" name="datetime" type="text" readonly="true" placeholder='Pick Date Time' >
+  	<%= submit_tag l(:button_create),:class=>'greenBtn' %>
+  </p>
+</div>
+
+<% end %>
+</div>
+</div>
+<% if !@meeting.empty? %>
+	<table class="formTable newDirectoryTable">
+		<tr>
+		<th  class="textAlignLeft">
+Title
+		</th>
+		<th  class="textAlignLeft">
+Discussion summary
+		</th>
+		<th  class="textAlignLeft">
+Date
+		</th>
+		<th  class="textAlignLeft">
+Time
+		</th>
+		<th>
+Edit
+		</th>
+		<th>
+Delete
+		</th>
+	</tr>
+		<% for meeting in @meeting %>
+		<tr>
+			<td class="textAlignLeft"><%= meeting.title %> </td>
+			<td class="textAlignLeft"><%= meeting.discussion_summary %> </td>
+			<td class="textAlignLeft"><%= meeting.date %> </td>
+			<td class="textAlignLeft"><%= meeting.time %> </td>
+			<td><%= link_to(image_tag('edit.png'), "#{Setting.host_name}/projects/#{@project.id}/edit_meeting/#{meeting.id}") %>
+			</td>
+			<td><%= link_to(image_tag('delete.png'),:data => {:confirm => "Are you sure you want to delete this meeting?"}, :method => :delete) %>
+			</td>
+		</tr>
+		
+		<% end %>
+	</table>
+<% end %>
+
+<script type="text/javascript">
+$(document).ready(function(){
+	$('#txt_datetime').datetimepicker({format:'d/m/Y H:i',minDate: Date(),onSelectDate:function(){
+		//$('#txt_datetime').removeClass('error_bg')
+}});
+	/*$('.new_event input:text,.new_event select').change(function(){		
+		if( $(this).val()!="" ) {
+	    	$(this).removeClass('error_bg');
+	    }
+	});*/
+
+
+});
+</script>
+

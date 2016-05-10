@@ -1,0 +1,303 @@
+ <aside class="contentRightColumn sprintProjectRightDiv">
+      <h3 class="projectTitleRightSide"><%= @project.name %></h3>
+      <div class="rightSideBarInnerContent contentRightColumnContent spentTimeRightSideDiv">
+        <% if User.current.allowed_to?(:manage_versions, @project) %>      
+          <p>
+            <span class="addSprintIcon"><%= link_to "Add Sprint", new_project_version_path(@project) %></span>
+          </p>      
+        <% end %>
+
+        <p >
+          <span class="logTime">
+          <% if User.current.allowed_to?(:log_time, @project) %>
+            <%= link_to l(:button_log_time), new_project_time_entry_path(@project) %> 
+          <% end %>  
+          </span>        
+        </p>
+
+        <p>
+          <span class="Details">
+          <%= link_to(l(:label_details), project_time_entries_path(@project)) %>
+          </span> 
+        </p>
+          
+        <p>
+          <span class="closeProjectIcon">
+            <% if User.current.allowed_to?(:close_project, @project) && @project.id != @general_activity_project.id%>
+              <% if @project.active? %>
+                <%= link_to "Close the project", close_project_path(@project), :data => {:confirm => l(:text_are_you_sure)}, :method => :post %>
+              <% else %>
+                <%= link_to "Re-open the project", reopen_project_path(@project), :data => {:confirm => l(:text_are_you_sure)}, :method => :post %>
+              <% end %>
+            <% end %>
+          </span> 
+        </p>
+
+        
+
+      </div>
+      <p class="sprintTotallogTime">
+
+          <span class="icon icon-time">
+            Total Hours Spent - <strong>
+            <% @total_hours.nil? ? total_hours = total_hours : total_hours = @total_hours
+            %>
+            <% @computed_hours =  total_hours.nil? ? '0.00' : TimeEntry.sum_hours(total_hours.collect(&:hours))%>
+            <%= l_hours(@computed_hours) %></strong>
+         </span>
+        </p>
+    </aside>
+
+
+    <aside class="contentRightColumn" >
+        <h3>Members</h3>
+          <div class="contentRightColumnContent createtoDo">
+                <h4>Manager :</h4>
+                <ul class="gallery">
+
+                  <% flag4 = 0; %>
+                    
+                        <% @users_by_role = @project.users_by_role %>
+
+                        <% if @users_by_role.any? %>
+                        <% @users_by_role.keys.sort.each do |role| %>
+
+                        <% roletrim = h role %>
+
+                        <% if roletrim == "Manager" %>
+                        <%= @users_by_role[role].sort.collect{|u| "<li class='ui-widget-content ui-corner-tr'>#{link_to_user u}</li>"}.join(" ").html_safe %>
+
+                        <% flag4 = 1; %>
+                        
+                        <% end %>
+                        
+                        <% end %>
+                        <% else %>
+                        <li class="ui-widget-content ui-corner-tr">
+                        N/A
+                        </li>
+                        <% end %>
+
+                        <%
+
+                        if flag4 == 0
+
+                        %>
+
+                        <li class="ui-widget-content ui-corner-tr">
+                        N/A
+                        </li>
+
+                        <% end %>
+
+                </ul>
+                
+                <div class="dragAndDropDiv">
+                    <h4>Developer : <span></span></h4>
+                    <ul class="gallery">
+
+                       <% flag2 = 0; %>
+
+                        <% @users_by_role = @project.users_by_role %>
+
+                        <% if @users_by_role.any? %>
+                        <% @users_by_role.keys.sort.each do |role| %>
+
+                        <% roletrim = h role %>
+
+                        <% if roletrim == "Developer" %>
+                        
+                        <%= @users_by_role[role].sort.collect{|u| "<li class='ui-widget-content ui-corner-tr'>#{link_to_user u}</li>"}.join(" ").html_safe %>
+
+                        <% flag2 = 1; %>
+                        
+                        <% end %>
+                        
+                        <% end %>
+                        <% else %>
+                        <li class="ui-widget-content ui-corner-tr">
+                        N/A
+                        </li>
+                        <% end %>
+
+                         <%
+
+                        if flag2 == 0
+
+                        %>
+
+                        <li class="ui-widget-content ui-corner-tr">
+                        N/A
+                        </li>
+
+                        <% end %>
+
+
+                    </ul>
+                </div>
+
+                <h4>Reporter :</h4>
+                <ul class="gallery">
+
+                  <% flag1 = 0; %>
+                    
+                        <% @users_by_role = @project.users_by_role %>
+
+                        <% if @users_by_role.any? %>
+                        <% @users_by_role.keys.sort.each do |role| %>
+
+                        <% roletrim = h role %>
+
+                        <% if roletrim == "Reporter" %>
+                        <%= @users_by_role[role].sort.collect{|u| "<li class='ui-widget-content ui-corner-tr'>#{link_to_user u}</li>"}.join(" ").html_safe %>
+                        <% flag1 = 1; %>
+                        <% end %>
+                        
+                        <% end %>
+                        <% else %>
+                        <li class="ui-widget-content ui-corner-tr">
+                        N/A
+                        </li>
+                        <% end %>
+
+                        <%
+
+                        if flag1 == 0
+
+                        %>
+
+                        <li class="ui-widget-content ui-corner-tr">
+                        N/A
+                        </li>
+
+                        <% end %>
+
+
+                </ul>
+
+                <h4>Client :</h4>
+                <ul class="gallery">
+
+                        <% flag = 0; %>
+                    
+                        <% @users_by_role = @project.users_by_role %>
+
+                        <% if @users_by_role.any? %>
+                        <% @users_by_role.keys.sort.each do |role| %>
+
+                        <% roletrim = h role %>
+
+                        <% if roletrim == "Client" %>
+                        <%= @users_by_role[role].sort.collect{|u| "<li class='ui-widget-content ui-corner-tr'>#{link_to_user u}</li>"}.join(" ").html_safe %>
+                        <% flag = 1; %>
+                        <% end %>
+                        
+                        <% end %>
+                        <% else %>
+                        <li class="ui-widget-content ui-corner-tr">
+                        N/A
+                        </li>
+                        <% end %>
+
+                        <%
+
+                        if flag == 0
+
+                        %>
+
+                        <li class="ui-widget-content ui-corner-tr">
+                        N/A
+                        </li>
+
+                        <% end %>
+
+                </ul>
+      
+                
+            </div>
+        </aside>
+
+  
+        <aside class="contentRightColumn logtimeclk">
+      <h3>Log Time</h3>
+      <div class="rightSideBarInnerContent spentTimeRightSideDiv contentRightColumnContent">
+        
+  <%= labelled_form_for @time_entry, :url => time_entries_path, :remote => true do |f| %>
+  <%= hidden_field_tag 'project_id', @project.id if @project %>
+  
+<div class="box tabular"> 
+
+  <%= f.hidden_field :project_id, :value => @project.id %>
+ <%= f.hidden_field :form_type, :value => "partial_form" %>
+  <p>
+    <%= f.text_field :issue_id, :size => 6 %>
+    <span id="time_entry_issue"><%= h("#{@time_entry.issue.tracker.name} ##{@time_entry.issue.id}: #{@time_entry.issue.subject}") if @time_entry.issue %></span>
+  </p>
+
+
+  <p><%= f.text_field :spent_on, :size => 10, :readonly => true, :required => true %><%= calendar_for('time_entry_spent_on') %></p>
+  
+  
+  <p class="hourAndMinutes">
+    <%= render :partial => "timelog/hours_mins", :locals => {:f => f, :type=>"timelog"} %> 
+  </p>
+
+  <p><%= f.text_field :comments, :required => true, :size => 100, :maxlength => 255 %></p>
+  <p><%= f.select :activity_id, activity_collection_for_select_options(@time_entry), :required => true %></p>
+  <%= call_hook(:view_timelog_edit_form_bottom, { :time_entry => @time_entry, :form => f }) %>
+  <p><%= submit_tag l(:button_create),:class=>'greenBtn partial_form' %></p>
+</div>
+
+  <% end %>
+
+
+      </div>
+    </aside>
+
+<script>
+$(document).ready(function(){
+    $('.partial_form').live( "click", function() {    
+    //form.preventDefault();    
+    $('.greenBtn').attr('disabled', true);
+    $('.greenBtn').addClass('grayBtn');
+    $('#flash_error').hide();
+    $('#flash_notice').hide();
+    var arr = $(".new_time_entry").serializeArray();
+    var hours; var mins;
+    $.each(arr, function(i, fd) {
+      if(fd.name == "time_entry[hours]")  hours = parseInt(fd.value);
+      if(fd.name == "mins") mins = parseInt(fd.value);
+    });
+    $.ajax({
+    type: $(".new_time_entry").attr('method'),
+    url: '<%= time_entries_path%>',
+    data: $(".new_time_entry").serialize(),
+    success: function(response){
+      if(response.length<55)
+      {
+        showFlashError("Valid Issue, Comments, Time and Activity are mandatory for Time Logging!");
+      }
+      else
+      {
+        showFlashNotice('Successfully added!');
+        time = $(".icon-time strong").text().trim().split(".");
+        hours +=parseInt(time[0]);
+        realmin = ((parseInt(time[1].split(" ")[0])+mins)%60);
+        hours += Math.floor((parseInt(time[1].split(" ")[0])+mins) / 60);
+        if(realmin<=5) realmin = "0"+realmin.toString();
+
+        $(".icon-time strong").text(hours.toString()+"."+realmin.toString()+" hours");
+        $('#time_entry_comments').val('');
+        $('#time_entry_issue_id').val('');
+      }
+     $('html,body').animate({ scrollTop: 0 }, 'slow', function () { });
+     $('.greenBtn').removeAttr('disabled');
+     $('.greenBtn').removeClass('grayBtn');
+    }
+  });
+  return false;
+  });
+
+});
+</script>
+      <%= call_hook(:view_projects_show_sidebar_bottom, :project => @project) %>

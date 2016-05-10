@@ -1,0 +1,171 @@
+<div class="clearfix bugsListForm">
+
+<%= call_hook(:view_issues_new_top, {:issue => @issue}) %>
+
+<%= labelled_form_for @issue, :url => project_issues_path(@project),
+                             :html => {:id => 'issue-form', :multipart => true} do |f| %>
+  <%= error_messages_for 'issue' %>
+  <%= hidden_field_tag 'copy_from', params[:copy_from] if params[:copy_from] %>
+
+
+
+
+<%= labelled_fields_for :issue, @issue do |f| %>
+<%= call_hook(:view_issues_form_details_top, { :issue => @issue, :form => f }) %>
+
+
+
+<% if @issue.safe_attribute? 'is_private' %>
+<p style="float:right; margin-right:1em;">
+  <%= f.check_box :is_private, :no_label => true %><label class="inline" for="issue_is_private" id="issue_is_private_label"><%= l(:field_is_private) %></label>
+</p>
+<% end %>
+
+<% if @issue.safe_attribute? 'project_id' %>
+<p><%= f.select :project_id, project_tree_options_for_select(@issue.allowed_target_projects, :selected => @issue.project), {:required => true},
+                :onchange => "updateIssueFrom('#{escape_javascript project_issue_form_path(@project, :id => @issue, :format => 'js')}')" %></p>
+<% end %>
+
+
+
+  <div class="oneColumn">
+    <form class="createNewTaskForm">
+
+      <% if @issue.safe_attribute? 'tracker_id' %>
+<p><%= f.select :tracker_id, @issue.project.trackers.collect {|t| [t.name, t.id]}, {:required => true},
+                :onchange => "updateIssueFrom('#{escape_javascript project_issue_form_path(@project, :id => @issue, :format => 'js')}')" %></p>
+<% end %>
+
+        
+       <% if @issue.safe_attribute? 'subject' %>
+<p><%= f.text_field :subject, :size => 80, :maxlength => 255, :required => true %></p>
+<% end %>
+
+        <% if @issue.safe_attribute? 'description' %>
+<p>
+  <%= f.label_for_field :description, :required => @issue.required_attribute?('description') %>
+  <%= link_to_function image_tag('edit.png'), '$(this).hide(); $("#issue_description_and_toolbar").show()' unless @issue.new_record? %>
+  <%= content_tag 'span', :id => "issue_description_and_toolbar", :style => (@issue.new_record? ? nil : 'display:none') do %>
+    <%= f.text_area :description,
+                   :cols => 60,
+                   :rows => (@issue.description.blank? ? 10 : [[10, @issue.description.length / 50].max, 100].min),
+                   :accesskey => accesskey(:edit),
+                   :class => 'wiki-edit',
+                   :no_label => true %>
+  <% end %>
+</p>
+<%= wikitoolbar_for 'issue_description' %>
+<% end %>
+
+    </form>
+  </div>
+
+
+  <%= labelled_fields_for :issue, @issue do |f| %>
+
+  <div class="twocolumn">
+      <form>
+
+
+        <% if @issue.safe_attribute?('status_id') && @allowed_statuses.present? %>
+<p><%= f.select :status_id, (@allowed_statuses.collect {|p| [p.name, p.id]}), {:required => true},
+                :onchange => "updateIssueFrom('#{escape_javascript project_issue_form_path(@project, :id => @issue, :format => 'js')}')" %></p>
+
+<% else %>
+<p><label><%= l(:field_status) %></label> <%= h(@issue.status.name) %></p>
+<% end %>
+
+
+          <% if @issue.safe_attribute? 'priority_id' %>
+<p><%= f.select :priority_id, (@priorities.collect {|p| [p.name, p.id]}), {:required => true}, :disabled => !@issue.leaf? %></p>
+<% end %>
+
+
+            <% if @issue.safe_attribute? 'assigned_to_id' %>
+<p><%= f.select :assigned_to_id, principals_options_for_select(@issue.assignable_users, @issue.assigned_to), :include_blank => true, :required => @issue.required_attribute?('assigned_to_id') %></p>
+<% end %>
+
+
+          <% if @issue.safe_attribute? 'parent_issue_id' %>
+<p id="parent_issue"><%= f.text_field :parent_issue_id, :size => 10, :required => @issue.required_attribute?('parent_issue_id') %></p>
+<%= javascript_tag "observeAutocompleteField('issue_parent_issue_id', '#{escape_javascript auto_complete_issues_path}')" %>
+<% end %>
+
+
+          <p id="attachments_form"><label><%= l(:label_attachment_plural) %></label><%= render :partial => 'attachments/form', :locals => {:container => @issue} %></p>
+
+          <% if @issue.safe_attribute? 'watcher_user_ids' -%>
+      <p id="watchers_form"><label><%= l(:label_issue_watchers) %></label>
+      <span id="watchers_inputs">
+        <%= watchers_checkboxes(@issue, @available_watchers) %>
+      </span>
+      <span class="search_for_watchers">
+      <%= link_to l(:label_search_for_watchers),
+                  {:controller => 'watchers', :action => 'new', :project_id => @issue.project},
+                  :remote => true,
+                  :method => 'get' %>
+      </span>
+      </p>
+    <% end %>
+                               
+      </form>             
+  </div>
+  <div class="twocolumn">
+      <form>
+        
+        
+        <% if @issue.safe_attribute? 'start_date' %>
+<p><%= f.text_field :start_date, :size => 10, :disabled => !@issue.leaf?, :required => @issue.required_attribute?('start_date') %><%= calendar_for('issue_start_date') if @issue.leaf? %></p>
+<% end %>
+
+
+        <% if @issue.safe_attribute? 'due_date' %>
+<p><%= f.text_field :due_date, :size => 10, :disabled => !@issue.leaf?, :required => @issue.required_attribute?('due_date') %><%= calendar_for('issue_due_date') if @issue.leaf? %></p>
+<% end %>
+
+
+        <% if @issue.safe_attribute? 'estimated_hours' %>
+<p><%= f.text_field :estimated_hours, :size => 3, :disabled => !@issue.leaf?, :required => @issue.required_attribute?('estimated_hours') %> <%= l(:field_hours) %></p>
+<% end %>
+
+
+        <% if @issue.safe_attribute?('done_ratio') && @issue.leaf? && Issue.use_field_for_done_ratio? %>
+<p><%= f.select :done_ratio, ((0..10).to_a.collect {|r| ["#{r*10} %", r*10] }), :required => @issue.required_attribute?('done_ratio') %></p>
+<% end %>
+                              
+          
+      </form>
+  </div>   
+
+
+  <% if @issue.safe_attribute? 'custom_field_values' %>
+<%= render :partial => 'issues/form_custom_fields' %>
+<% end %>
+
+
+  <% end %>
+
+<% include_calendar_headers_tags %>
+
+
+<%= call_hook(:view_issues_form_details_bottom, { :issue => @issue, :form => f }) %>
+<% end %>
+
+
+  <%= submit_tag "Continue", :class => "greenBtn" %>
+  <%= submit_tag "Create and continue", :name => 'continue', :class => "blueBtn" %>
+  <%= preview_link preview_new_issue_path(:project_id => @project), 'issue-form' %>
+
+  <%= javascript_tag "$('#issue_subject').focus();" %>
+<% end %>
+
+
+<div id="preview" class="wiki"></div>
+
+<% content_for :header_tags do %>
+    <%= robot_exclusion_tag %>
+<% end %>
+
+
+</div>
+<div class="clear"></div>

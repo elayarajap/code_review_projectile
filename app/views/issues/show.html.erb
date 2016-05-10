@@ -1,0 +1,223 @@
+<%= render :partial => 'action_menu' %>
+
+<h2 class="title"><%= issue_heading(@issue) %></h2>
+
+<div class="<%= @issue.css_classes %> details" id="showdet">
+
+  <%= avatar(@issue.author, :size => "50") %>
+<div class="splitContentDiv bugView">
+  <div class="subject">
+  <%= render_issue_subject_with_tree(@issue) %>
+  </div>
+  <p class="author">
+  <%= authoring @issue.created_on, @issue.author %>.
+  <% if @issue.created_on != @issue.updated_on %>
+  <%= l(:label_updated_time, time_tag(@issue.updated_on)).html_safe %>.
+  <% end %>
+  </p>
+
+        <div class="showIssueDivLayout">
+          <p>
+            <label>Status<span>:</span></label>
+            <%= @issue.status.name %>
+          </p>
+
+          <p>
+            <label>Priority<span>:</span> </label>
+            <%= @issue.priority.name %>
+          </p>
+
+          <p>
+            <% unless @issue.disabled_core_fields.include?('assigned_to_id') %>
+              <label>Assignee<span>:</span>  </label>
+              <%= avatar(@issue.assigned_to, :size => "14").to_s.html_safe + (@issue.assigned_to ? link_to_user(@issue.assigned_to) : "-") %>
+            <% end %>
+          </p>
+
+          <p>
+            <% unless @issue.disabled_core_fields.include?('fixed_version_id') %>
+              <label>Target Version<span>:</span> </label>
+              <%= (@issue.fixed_version ? link_to_version(@issue.fixed_version) : "-") %>
+            <% end %>
+          </p>
+          
+        <!--  <p>
+            <%# unless @issue.disabled_core_fields.include?('start_date') %>
+              <label>Start date<span>:</span> </label>
+              <%#= format_date(@issue.start_date) %>
+            <%# end %>
+          </p>
+
+          <p>
+            <%# unless @issue.disabled_core_fields.include?('due_date') %>
+              <label>Due date<span>:</span> </label>
+              <%#= format_date(@issue.due_date) %>
+            <%# end %>
+          </p> -->
+
+          <p>
+            <% unless @issue.disabled_core_fields.include?('estimated_hours') %>
+              <% unless @issue.estimated_hours.nil? %>
+              <label>Estimated Hours<span>:</span> </label>
+              <%= l_hours(@issue.estimated_hours) %>
+              <% end %>
+            <% end %>
+          </p>
+
+          <p>
+            <% if User.current.allowed_to?(:view_time_entries, @project) %>
+            <label>Time Spent<span>:</span> </label>
+
+            
+
+
+            <%= (@issue.total_spent_hours > 0 ? link_to(l_hours(TimeEntry.sum_hours(@issue.time_entries.collect(&:hours))), project_issue_time_entries_path(@project, @issue)) : "-") %>
+            <% end %>
+          </p>          
+
+          <%= render_custom_fields_rows(@issue) %>
+          <%= call_hook(:view_issues_show_details_bottom, :issue => @issue) %>
+
+        </div>
+</div>
+
+    
+      
+
+      
+
+
+
+
+
+
+<!--<table class="attributes">
+<%= issue_fields_rows do |rows|
+
+  rows.left l(:field_status), h(@issue.status.name), :class => 'status'
+  rows.left l(:field_priority), h(@issue.priority.name), :class => 'priority'
+
+  unless @issue.disabled_core_fields.include?('assigned_to_id')
+    rows.left l(:field_assigned_to), avatar(@issue.assigned_to, :size => "14").to_s.html_safe + (@issue.assigned_to ? link_to_user(@issue.assigned_to) : "-"), :class => 'assigned-to'
+  end
+
+  unless @issue.disabled_core_fields.include?('fixed_version_id')
+    rows.left l(:field_fixed_version), (@issue.fixed_version ? link_to_version(@issue.fixed_version) : "-"), :class => 'fixed-version'
+  end
+
+  unless @issue.disabled_core_fields.include?('start_date')
+    rows.right l(:field_start_date), format_date(@issue.start_date), :class => 'start-date'
+  end
+  unless @issue.disabled_core_fields.include?('due_date')
+    rows.right l(:field_due_date), format_date(@issue.due_date), :class => 'due-date'
+  end
+  unless @issue.disabled_core_fields.include?('done_ratio')
+    rows.right l(:field_done_ratio), progress_bar(@issue.done_ratio, :width => '80px', :legend => "#{@issue.done_ratio}%"), :class => 'progress'
+  end
+  unless @issue.disabled_core_fields.include?('estimated_hours')
+    unless @issue.estimated_hours.nil?
+      rows.right l(:field_estimated_hours), l_hours(@issue.estimated_hours), :class => 'estimated-hours'
+    end
+  end
+  if User.current.allowed_to?(:view_time_entries, @project)
+    rows.right l(:label_spent_time), (@issue.total_spent_hours > 0 ? link_to(l_hours(@issue.total_spent_hours), project_issue_time_entries_path(@project, @issue)) : "-"), :class => 'spent-time'
+  end
+end %>
+<%= render_custom_fields_rows(@issue) %>
+<%= call_hook(:view_issues_show_details_bottom, :issue => @issue) %>
+</table>-->
+
+<% if @issue.description? || @issue.attachments.any? -%>
+<hr />
+<% if @issue.description? %>
+<div class="description">
+
+  <p><strong><%=l(:field_description)%></strong></p><br/>
+  <div class="wiki">
+  <%= @issue.description.gsub(/\n/, '<br />').html_safe %>
+  </div>
+</div>
+<% end %>
+<%= link_to_attachments @issue, :thumbnails => true %>
+<% end -%>
+
+
+
+
+
+<% if @journals.present? %>
+<div id="history">
+<%= render :partial => 'history', :locals => { :issue => @issue, :journals => @journals } %>
+</div>
+<% end %>
+
+
+
+
+
+
+
+<%= call_hook(:view_issues_show_description_bottom, :issue => @issue) %>
+
+</div>
+
+<% if @issue.editable? %>
+  <div id="update" style="display:none;">
+  <!--<h3><%= l(:button_update) %></h3>-->
+  <%= render :partial => 'edit' %>
+  </div>
+<% end %>
+
+
+
+<% html_title "#{@issue.tracker.name} ##{@issue.id}: #{@issue.subject}" %>
+
+
+<%# content_for :sidebar do %>
+
+<%#= render :partial => 'layouts/projects_sidebar' %>
+
+ <!-- <aside class="contentRightColumn" >    
+    <h3>Issues List</h3>
+    <div class="contentRightColumnContent">
+        <h4>Recent list in your projects</h4>
+        <table width="100%" cellpadding="10" cellspacing="0" class="formTable">
+          <tr>
+            <th width="75%" align="left">Project name</th>
+            <th align="center">Issue ID</th>
+          </tr>
+          <%# for issue in @issues %>
+            <%# project = Project.find_by_id(issue.project_id) %>
+            <tr>
+              <td width="75%" class="textAlignLeft"><%#= link_to_project project %></td>
+              <td class="textAlignLeft"><%#= link_to issue.id, issue_path(issue) %></td>
+            </tr>
+          <%# end %>
+        </table>
+      </div>
+    </aside>
+    <div class="clear"></div>-->
+      
+<%# end %>
+<%= render :partial => 'projects/add_sprint_close_project' %>
+
+
+<% content_for :header_tags do %>
+    <%= auto_discovery_link_tag(:atom, {:format => 'atom', :key => User.current.rss_key}, :title => "#{@issue.project} - #{@issue.tracker} ##{@issue.id}: #{@issue.subject}") %>
+<% end %>
+
+<%= context_menu issues_context_menu_path %>
+
+<script type="text/javascript">
+  jQuery(document).ready(function($) {
+    <%if issue_heading(@issue).include?("Bug") %>
+      $('.bugs').addClass('selected');
+    <%else%>
+      $('.todo').addClass('selected');
+    <%end%>
+
+    $(".wiki").html().replace(/\n\r?/g, '<br />')
+
+
+  });
+</script>

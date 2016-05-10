@@ -1,0 +1,38 @@
+<%= error_messages_for @document %>
+
+<div class="box tabular">
+<p><%= f.select :category_id, DocumentCategory.active.collect {|c| [c.name, c.id]} %></p>
+<p><%= f.text_field :title, :required => true, :size => 60 %></p>
+<p><%= f.text_area :description, :cols => 60, :rows => 15, :class => 'wiki-edit' %></p>
+</div>
+
+<%= wikitoolbar_for 'document_description' %>
+
+<% if @document.new_record? %>
+<div class="box tabular">
+<p class="attachFilesDiv">
+	<label><%=l(:label_attachment_plural)%></label>
+	<span class="attachFileSpan">
+		<%= render :partial => 'attachments/form', :locals => {:container => @document, :disallow => true} %>
+	</span>
+	
+</p>
+</div>
+<% end %>
+
+<script type="text/javascript">
+ jQuery(document).ready(function($) {
+
+   var spanDom = "<span class='textareaSpan'></span>";
+   var jstElements = $(".jstElements");
+   var jstEditor = $(".jstEditor");
+   
+   $(".jstElements").parent().append(spanDom);
+   
+   $( ".textareaSpan" ).append(jstElements);
+   $( ".textareaSpan" ).append(jstEditor);
+
+   $(".attachFilesDiv").hide();
+
+ 	});
+</script>

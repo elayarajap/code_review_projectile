@@ -1,0 +1,42 @@
+<h2 class="title"><%= l(:label_spent_time) %></h2>
+
+<div id="timeLogFormDiv">
+<%= form_tag({:controller => 'timelog', :action => 'unapproved', :project_id => @project, :issue_id => @issue}, :method => :get, :id => 'query_form') do %>
+<%= render :partial => 'date_range' %>
+<% end %>
+</div>
+
+<div id="div_unapproved_time" class="total-hours">
+<p class="approve-left"><%= l(:label_total_time) %>: <%= html_hours(l_hours(@total_hours_gn)) %></p>
+</div>
+
+<% unless @entries.empty? %>
+<div id = "unapproves_details">
+<%= render :partial => 'unapproved_logs', :locals => { :entries => @entries }%>
+</div>
+
+<% end %>
+
+<% html_title l(:label_spent_time), l(:label_details) %>
+
+<% content_for :header_tags do %>
+    <%= auto_discovery_link_tag(:atom, {:issue_id => @issue, :format => 'atom', :key => User.current.rss_key}, :title => l(:label_spent_time)) %>
+<% end %>
+
+<script type="text/javascript">
+  jQuery(document).ready(function($) {
+  
+    $(".collapsible.collapsed").hide();
+    $('.add-filter .sbHolder').live('click',function(){
+      $("select").selectbox();
+
+    })
+
+    history.pushState({ page: 1 }, "Title 1", "#no-back");
+    window.onhashchange = function (event) {
+        window.location.hash = "no-back";
+    };
+  });
+
+</script>
+

@@ -1,0 +1,350 @@
+<%# render_timelog_breadcrumb %>
+
+<h2 class="title"><%= l(:label_spent_time) %></h2>
+
+<%= form_tag({:controller => 'timelog', :action => 'report',
+              :project_id => @project, :issue_id => @issue},
+            :method => :get, :id => 'query_form') do %>
+  <% @report.criteria.each do |criterion| %>
+    <%= hidden_field_tag 'criteria[]', criterion, :id => nil %>
+  <% end %>
+  <%= render :partial => 'timelog/date_range' %>
+
+  <div class="total-hours">
+<p>
+        Total Hours:
+        <%= l_hours(@thours) %> | Approved:
+        <%= l_hours(@total_approved_hours) %> | Billable:
+        <%= l_hours(@total_billable_hours) %> | Non-billable:
+        <%= l_hours(@th_rp_sub) %>
+
+        </p>
+
+</div>
+
+<br>
+
+ <p>
+    <%= l(:label_details) %>
+    <%= select_tag 'columns', options_for_select([[l(:label_year), 'year'],
+                                                                            [l(:label_month), 'month'],
+                                                                            [l(:label_week), 'week'],
+                                                                            [l(:label_day_plural).titleize, 'day']], @report.columns),
+                                                        :onchange => "this.form.submit();$('#pageloaddiv').show();" %><label></label>
+
+   
+  
+
+
+
+  <%= l(:button_add) %> <%= select_tag('criteria[]', options_for_select([[]] + (@report.available_criteria.keys - @report.criteria).collect{|k| [l_or_humanize(@report.available_criteria[k][:label]), k]}),
+                                                          :onchange => "this.form.submit();$('#pageloaddiv').show();",
+                                                          :style => 'width: 200px',
+                                                          :id => nil,
+                                                          :disabled => (@report.criteria.length >= 3), :id => "criterias") %>
+
+<% query_params = params.slice(:f, :op, :v, :sort) %>
+
+<%= link_to l(:button_clear), query_params.merge({:project_id => @project, :issue_id => @issue, :period_type => params[:period_type], :period => params[:period], :from => @from, :to => @to, :columns => @report.columns}), :class => 'icon icon-reload' %><label></label>
+
+ Hours type
+ <%= select_tag("hours_type", options_for_select([['Approved', 1], ['Billable', 2], ['Non Billable', 3], ['Total Hours', 4]], selected: params["hours_type"]), :onchange => "this.form.submit();$('#pageloaddiv').show();") %>
+
+
+
+</p>
+<% end %>
+
+<br>
+
+<% unless @report.criteria.empty? %>
+
+<% unless @report.hours.empty? %>
+<div class="autoscroll">
+<table class="list formTable" id="time-report">
+<thead>
+<tr>
+
+
+
+<% @report.criteria.each do |criteria| %>
+  <th><%= l_or_humanize(@report.available_criteria[criteria][:label]) %></th>
+<% end %>
+<% columns_width = (40 / (@report.periods.length+1)).to_i %>
+<% @report.periods.each do |period| %>
+  <th class="period" width="<%= columns_width %>%"><%= period %></th>
+<% end %>
+  <th class="total" width="<%= columns_width %>%"><%= l(:label_total_time) %></th>
+</tr>
+</thead>
+<tbody>
+  <% if params.has_key?(:hours_type) %>
+    <% if params[:hours_type] == "1" %>
+    <% @t_hours = TimeEntry.sum_hours(@scope.map{|hash| hash['hours'].to_f.round(2)}) %>
+    <% elsif params[:hours_type] == "2" %>
+    <% @t_hours = TimeEntry.sum_hours(@scope.map{|hash| hash['billable'].to_f.round(2)}) %>
+    <% else %>
+    <% @t_hours = TimeEntry.sum_hours(@scope.map{|hash| hash['non_billable'].to_f.round(2)}) %>
+    <% end %>
+  <% else %>
+  <% @t_hours = TimeEntry.sum_hours(@scope.map{|hash| hash['hours'].to_f.round(2)}) %>  
+  <% end %>
+
+<%= render :partial => 'report_criteria', :locals => {:criterias => @report.criteria, :hours => @report.hours, :level => 0} %>
+  <tr class="total">
+  <td><%= l(:label_total_time) %></td>
+  <%= ('<td></td>' * (@report.criteria.size - 1)).html_safe %>
+  <% total = 0 -%>
+  <% @report.periods.each do |period| -%>
+    <% sum = sum_hours(select_hours(@report.hours, @report.columns, period.to_s)); total += sum -%>
+    <td class="hours"><%= html_hours("%.2f" % sum) if sum > 0 %></td>
+  <% end -%>
+  <td class="hours"><%= html_hours("%.2f" % total) if total > 0 %></td>
+  </tr>
+</tbody>
+</table>
+</div>
+
+<% other_formats_links do |f| %>
+  <%= f.link_to 'CSV', :url => params %>
+<% end %>
+<% end %>
+<% end %>
+
+<% html_title l(:label_spent_time), l(:label_report) %>
+<div id="tooltip" class="hidden">
+    <p><span id="value">100</span>
+    </p>
+</div>
+<div id="stackedGraph">
+<script>
+
+var graph_raw_data = <%= raw get_graph_data(@report,@report.hours,0)%>;
+var graph_raw_data = jQuery.parseJSON((graph_raw_data[0]))
+var margins = {
+    top: 12,
+    left: 72,
+    right: 24,
+    bottom: 24
+},
+legendPanel = {
+    width: 180
+},
+periods = <%= @report.criteria.empty? ? 1 : @report.periods.length%>
+periods < 4 ? height = periods*100:  height = periods*50
+var criteria = <%= @report.criteria.empty? ? 0 : @report.criteria.length%>
+    width = 900 - margins.left - margins.right - legendPanel.width,
+    height = height - margins.top - margins.bottom,
+    dataset = graph_raw_data,
+    series = dataset.map(function (d) {
+        return d.name;
+    }),
+    dataset = dataset.map(function (d) {
+        return d.data.map(function (o, i) {
+            // Structure it so that your numeric
+            // axis (the stacked amount) is y
+            return {
+                y: o.count,
+                x: o.month,
+                r: o.result
+            };
+        });
+    }),
+    stack = d3.layout.stack();
+
+stack(dataset);
+
+var dataset = dataset.map(function (group) {
+    return group.map(function (d) {
+        // Invert the x and y values, and y0 becomes x0
+        return {
+            x: d.y,
+            y: d.x,
+            r: d.r,
+            x0: d.y0
+        };
+    });
+}),
+    svg = d3.select('#stackedGraph')
+        .append('svg')
+        .attr('width', width + margins.left + margins.right + legendPanel.width)
+        .attr('height', height + margins.top + margins.bottom)
+        .append('g')
+        .attr('transform', 'translate(' + margins.left + ',' + margins.top + ')'),
+    xMax = d3.max(dataset, function (group) {
+        return d3.max(group, function (d) {
+            return d.x + d.x0;
+        });
+    }),
+    xScale = d3.scale.linear()
+        .domain([0, xMax])
+        .range([0, width]),
+    months = dataset[0].map(function (d) {
+        return d.y;
+    }),
+    
+    yScale = d3.scale.ordinal()
+        .domain(months)
+        .rangeRoundBands([0, height], .1),
+    xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient('bottom'),
+    yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient('left'),
+    colours = d3.scale.category10(),
+    groups = svg.selectAll('g')
+        .data(dataset)
+        .enter()
+        .append('g')
+        .style('fill', function (d, i) {
+        return colours(i);
+    }),
+    rects = groups.selectAll('rect')
+        .data(function (d) {
+        return d;
+    })
+        .enter()
+        .append('rect')
+        .attr('x', function (d) {
+        return xScale(d.x0);
+    })
+        .attr('y', function (d, i) {
+        return yScale(d.y);
+    })
+        .attr('height', function (d) {
+        return yScale.rangeBand();
+    })
+        .attr('width', function (d) {
+        return xScale(d.x);
+    })
+        .on('mouseover', function (d) {
+            var xPos = d3.event.pageX;
+
+            if(criteria == 1){ 
+                var yPos = d3.event.pageY
+            }else {
+                var yPos = d3.event.pageY - $("#tooltip").height() ;
+            }
+            //Tooltip message        
+            if(d.r) {
+                var arr_res = d.r
+                var res = (d.r).join()
+                var res = "<table border='0'><tr><th colspan='2'>Total Hours: "+(d.x).toFixed(2) +"</th></tr>"
+                    for(var e=0; e < arr_res.length; e++){
+                        arr_res_data = arr_res[e].split('-')
+                        res += "<tr><td>"+arr_res_data[0]+"</td><td>"+arr_res_data[1]+"</td></tr>"
+                    }
+                    res +="</table>";
+            }else { 
+                
+                if(parseFloat(d.x) <= 1) {    
+                        var res = (d.x).toFixed(2) +"Hr"                   
+                    
+                }else {
+                    var res = (d.x).toFixed(2) +"Hrs"
+                }
+            }
+        d3.select('#tooltip')
+            .style('left', xPos + 'px')
+            .style('top', yPos + 'px')
+            .select('#value')
+            .html(res);
+
+        d3.select('#tooltip').classed('hidden', false);
+    })
+        .on('mouseout', function () {
+        d3.select('#tooltip').classed('hidden', true);
+    })
+
+    svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', 'translate(0,' + height + ')')
+        .call(xAxis);
+
+svg.append('g')
+    .attr('class', 'axis')
+    .call(yAxis);
+
+// svg.append('rect')
+//     .attr('fill', '#e5e6e6')
+//     .attr('width', 250)
+//     .attr('height', 30 * dataset.length)
+//     .attr('x', width+20)
+//     .attr('y', 0);
+
+
+// series.forEach(function (s, i) {
+//     var txt = s.substring(0, 20);
+//     svg.append('text')
+//         .attr('fill', 'black')
+//         .attr('x', width + 20 + 8)
+//         .attr('y', i * 24 + 24)
+//         .text(txt);
+//     svg.append('rect')
+//         .attr('fill', colours(i))
+//         .attr('width', 30)
+//         .attr('height', 20)
+//         .attr('x', width + margins.left + 90)
+//         .attr('y', i * 24 + 6);
+// });
+</script>
+<% if !@report.criteria.empty? && !@report.hours.empty? %>
+    <div class="graphLegend">
+    </div>
+<%end%>
+
+</div>
+
+
+<script type="text/javascript">
+
+  jQuery(document).ready(function($) {
+
+   
+    
+    $('.add-filter .sbHolder').live('click',function(){
+      $("select").selectbox();
+
+    })
+    
+    $("a.details").addClass("selected");
+
+    $("#criterias option[value='cf_48']").remove();
+    $("#criterias option[value='cf_41']").remove();
+    $("#criterias option[value='category']").remove();
+
+    <% if @report.criteria.length >= 3 %>
+    $("#criterias option").remove();
+    <% end %>
+
+    <% if @report.criteria.length == 0 %>
+    $("#hours_type option").remove();
+    <% end %>
+    <% if !@report.criteria.empty? %>
+    //Stacked graph legend
+    var graph_raw_data = <%= raw get_graph_data(@report,@report.hours,0)%>;
+    var graph_raw_data = jQuery.parseJSON((graph_raw_data[0]))
+    var htm = "<ul>";
+    var criteria = <%= @report.criteria.empty? ? 0 : @report.criteria.length%>
+        dataset = graph_raw_data,
+        series = dataset.map(function (d) {
+            return d.name;
+        }),
+        
+    series.forEach(function (s, i) {
+        htm += "<li>"+s.substring(0, 32)+"<span style='background:"+colours(i)+"'></span></li>";
+    });
+    htm += "</ul>"
+    $(".graphLegend").html(htm);
+    <%end%>
+
+
+    $("#criterias option:first").text('Select');
+    $("#criterias option:first").attr('disabled',true);
+
+  });
+</script>
+
+<div id="pageloaddiv" style="display:none;"></div>
+

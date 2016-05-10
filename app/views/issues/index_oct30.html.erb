@@ -1,0 +1,191 @@
+<% content_for :header_tags do %>
+  <%= javascript_include_tag 'jquery-ui' %>
+  <%= javascript_include_tag 'custom' %>
+<% end %>
+
+<div class="contextual">
+<% if !@query.new_record? && @query.editable_by?(User.current) %>
+  <%= link_to l(:button_edit), edit_query_path(@query), :class => 'icon icon-edit' %>
+  <%= delete_link query_path(@query) %>
+<% end %>
+</div>
+
+<h2 class="title" style="border-bottom: none;"><%= @query.new_record? ? l(:label_issue_plural) : h(@query.name) %></h2>
+<% html_title(@query.new_record? ? l(:label_issue_plural) : @query.name) %>
+
+<%= form_tag({ :controller => 'issues', :action => 'index', :project_id => @project },
+            :method => :get, :id => 'query_form') do %>
+    <%= hidden_field_tag 'set_filter', '1' %>
+    <%= hidden_field_tag 'tid', params["tid"] %>
+    <div id="query_form_content" class="hide-when-print">
+    <fieldset id="filters" class="collapsible <%= @query.new_record? ? "" : "collapsed" %>">
+      <div style="<%= @query.new_record? ? "" : "display: none;" %>">
+        <%= render :partial => 'queries/filters', :locals => {:query => @query} %>
+      </div>
+    </fieldset>
+    <fieldset class="collapsible collapsed">
+      <legend onclick="toggleFieldset(this);"><%= l(:label_options) %></legend>
+      <div style="display: none;">
+        <table>
+          <tr>
+            <td><%= l(:field_column_names) %></td>
+            <td><%= render_query_columns_selection(@query) %></td>
+          </tr>
+          <tr>
+            <td><label for='group_by'><%= l(:field_group_by) %></label></td>
+            <td><%= select_tag('group_by',
+                               options_for_select(
+                                 [[]] + @query.groupable_columns.collect {|c| [c.caption, c.name.to_s]},
+                                 @query.group_by)
+                       ) %></td>
+          </tr>
+          <tr>
+            <td><%= l(:button_show) %></td>
+            <td><%= available_block_columns_tags(@query) %></td>
+          </tr>
+        </table>
+      </div>
+    </fieldset>
+    </div>
+    <p class="buttons hide-when-print">
+
+    <%= link_to_function l(:button_apply), 'submit_query_form("query_form")', :class => 'icon icon-checked greenBtn' %>
+    <%= link_to l(:button_clear), { :set_filter => 1, :project_id => @project, :tid => params["tid"] }, :class => 'icon icon-reload blueBtn'  %>
+    <% if @query.new_record? && User.current.allowed_to?(:save_queries, @project, :global => true) %>
+        <%= link_to_function l(:button_save),
+                             "$('#query_form').attr('action', '#{ @project ? new_project_query_path(@project) : new_query_path }'); submit_query_form('query_form')",
+                             :class => 'icon icon-save blueBtn' %>
+    <% end %>
+    </p>
+<% end %>
+
+<%= error_messages_for 'query' %>
+<% if @query.valid? %>
+<% if @issues.empty? %>
+<p class="nodata"><%= l(:label_no_data) %></p>
+<% else %>
+<%= render :partial => 'issues/list', :locals => {:issues => @issues, :query => @query} %>
+<p class="pagination"><%= pagination_links_full @issue_pages, @issue_count %></p>
+<% end %>
+
+<% other_formats_links do |f| %>
+  <%= f.link_to 'Atom', :url => params.merge(:key => User.current.rss_key) %>
+  <%= f.link_to 'CSV', :url => params, :onclick => "showModal('csv-export-options', '330px'); return false;" %>
+  <%= f.link_to 'PDF', :url => params %>
+<% end %>
+
+<div id="csv-export-options" style="display:none;">
+  <h3 class="title"><%= l(:label_export_options, :export_format => 'CSV') %></h3>
+  <%= form_tag(params.merge({:format => 'csv',:page=>nil}), :method => :get, :id => 'csv-export-form') do %>
+  <p>
+    <label><%= radio_button_tag 'columns', '', true %> <%= l(:description_selected_columns) %></label><br />
+    <label><%= radio_button_tag 'columns', 'all' %> <%= l(:description_all_columns) %></label>
+  </p>
+  <p>
+    <label><%= check_box_tag 'description', '1', @query.has_column?(:description) %> <%= l(:field_description) %></label>
+  </p>
+  <p class="buttons">
+    <%= submit_tag l(:button_export), :name => nil, :onclick => "hideModal(this);" %>
+    <%= submit_tag l(:button_cancel), :name => nil, :onclick => "hideModal(this);", :type => 'button' %>
+  </p>
+  <% end %>
+</div>
+
+<% end %>
+<%= call_hook(:view_issues_index_bottom, { :issues => @issues, :project => @project, :query => @query }) %>
+
+<% content_for :sidebar do %>
+    <aside class="contentRightColumn" ><%= render :partial => 'issues/sidebar' %></aside>
+
+    <aside class="contentRightColumn" >
+        <h3>Members</h3>
+          <div class="contentRightColumnContent createtoDo">
+                <h4>Manager :</h4>
+                <ul class="gallery ui-helper-reset ui-helper-clearfix drag">
+                    
+                        <% @users_by_role = @project.users_by_role %>
+
+                        <% if @users_by_role.any? %>
+                        <% @users_by_role.keys.sort.each do |role| %>
+
+                        <% roletrim = h role %>
+
+                        <% if roletrim == "Manager" %>
+                        <li class="ui-widget-content ui-corner-tr">
+                        <%= @users_by_role[role].sort.collect{|u| link_to_user u}.join(", ").html_safe %>
+                        </li>
+                        <% end %>
+                        
+                        <% end %>
+                        <% else %>
+                        <li class="ui-widget-content ui-corner-tr">
+                        N/A
+                        </li>
+                        <% end %>
+
+                </ul>
+                
+                
+                <div class="dragAndDropDiv">
+                    <h4>Developer : <span>Drag & Drop developers from here</span></h4>
+                    <ul id="gallery" class="gallery ui-helper-reset ui-helper-clearfix drag assign">
+
+                        <% @users_by_role = @project.users_by_role %>
+
+                        <% if @users_by_role.any? %>
+                        <% @users_by_role.keys.sort.each do |role| %>
+
+                        <% roletrim = h role %>
+
+                        <% if roletrim == "Developer" %>
+                        <li class="ui-widget-content ui-corner-tr">
+                        <%= @users_by_role[role].sort.collect{|u| link_to_user u}.join(", ").html_safe %>
+                        </li>
+                        <% end %>
+                        
+                        <% end %>
+                        <% else %>
+                        <li class="ui-widget-content ui-corner-tr">
+                        N/A
+                        </li>
+                        <% end %>
+
+                    </ul>
+                </div>
+                
+                
+                
+                <div class="dragAndDropDiv">
+                    <h4>Priority :   <span>Drag & Drop priority from here</span></h4>
+                    <ul id="gallery2" class="gallery ui-helper-reset ui-helper-clearfix drag">
+                        <li class="ui-widget-content ui-corner-tr lowPriority priority">Low</li>
+                        <li class="ui-widget-content ui-corner-tr mediumPriority priority">Medium</li>
+                        <li class="ui-widget-content ui-corner-tr highPriority priority">High</li>
+                    </ul>
+                </div>
+                
+            </div>
+        </aside>
+<% end %>
+
+<% content_for :header_tags do %>
+    <%= auto_discovery_link_tag(:atom,
+                                {:query_id => @query, :format => 'atom',
+                                 :page => nil, :key => User.current.rss_key},
+                                :title => l(:label_issue_plural)) %>
+    <%= auto_discovery_link_tag(:atom,
+                                {:controller => 'journals', :action => 'index',
+                                 :query_id => @query, :format => 'atom',
+                                 :page => nil, :key => User.current.rss_key},
+                                :title => l(:label_changes_details)) %>
+<% end %>
+
+<%= context_menu issues_context_menu_path %>
+<script type="text/javascript">
+  jQuery(document).ready(function($) {
+    $("#tr_tracker_id").hide();
+    //$(".add-filter").hide();
+    $(".collapsible.collapsed").hide();
+    $("[id^='cb_']").hide();
+  });
+</script>

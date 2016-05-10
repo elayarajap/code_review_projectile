@@ -1,0 +1,408 @@
+<% count = 0 %>
+<% for project in @projects %>
+<% @pro = project %>
+<% cond = @pro.project_condition(Setting.display_subprojects_issues?) %>
+<% total_hours = TimeEntry.visible.sum(:hours, :conditions => cond).to_f %>
+<% count = count+total_hours %>
+<% end %>
+
+ <% @group_manager = Group.where(:lastname => "Managers").first %>
+
+  <% user_in_group = User.user_in_group(@group_manager.id).count %>
+
+
+
+<% content_for :sidebar do %>
+
+  <aside class="contentRightColumn" >
+    <h3>TimeSheet1</h3>
+    <div class="contentRightColumnContent">
+      <h4>Overall Time spent</h4>
+      <table width="100%" cellpadding="10" cellspacing="0" class="formTable rightSideProjectTable">
+
+       
+
+        <% for project in @projects %>
+          <% @pro = project 
+
+           @projects_sub_side = Project.where(:parent_id => @pro.id).active 
+
+          %>
+
+          <% cond = @pro.project_condition(Setting.display_subprojects_issues?) %> 
+          <% @total_hours = TimeEntry.visible.sum(:hours, :conditions => cond).to_f %>
+
+
+<!-- Main project block Access -->
+
+
+<% subproj_tot_count_flag_side = 0 %>
+<% subproj_tot_count_flag_side_double = 0 %>
+
+
+    <% for projects_sub_top_val in @projects_sub_side %>
+    
+    <% if user_in_group > 0 
+
+      if Member.where("project_id = #{projects_sub_top_val.id} AND user_id = #{User.current.id}").present? 
+
+        %> 
+
+    <% subproj_tot_count_flag_side = 1 %>
+    <% subproj_tot_count_flag_side_double = 1 %>
+
+     <% end %>
+
+    <% elsif User.current.admin? %>
+
+    <% subproj_tot_count_flag_side = 1 %>
+
+    <% elsif Member.where("project_id = #{projects_sub_top_val.id} AND user_id = #{User.current.id}").present? %>
+
+    <% subproj_tot_count_flag_side = 1 %>
+
+     <% end %>
+ 
+    <% end %>
+
+<!-- Main project block Access ends -->
+
+
+
+<!-- Account assigned without sub projects -->
+
+<% if subproj_tot_count_flag_side_double == 0 %>
+
+   <%  if Member.where("project_id = #{@pro.id} AND user_id = #{User.current.id}").present? %> 
+
+   <% subproj_tot_count_flag_side = 1 %>
+
+        <% end %>
+
+<% end %>
+
+
+<!-- Account assigned without sub projects ends here -->
+
+
+<% if subproj_tot_count_flag_side == 1 %>
+
+<!-- Account show -->
+
+          <tr class="rightSideProjectTitle">
+            <td width="75%" class="textAlignLeft"><%= link_to_project project %></td>
+            <td class="textAlignLeft">
+            
+            <%= l_hours(@total_hours) %>
+
+            </td>
+          </tr>
+
+
+           <!-- Account show ends -->
+
+
+           <!-- sub project block starts -->
+
+
+          <% for projects_sub_side_values in @projects_sub_side %>
+          <% @projects_sub_side_values = projects_sub_side_values %>
+
+          <% cond_side = @projects_sub_side_values.project_condition(Setting.display_subprojects_issues?) %>
+          <% @total_hours_side = TimeEntry.visible.sum(:hours, :conditions => cond_side).to_f %>
+
+          <% if user_in_group > 0 %>
+
+          <% if Member.where("project_id = #{projects_sub_side_values.id} AND user_id = #{User.current.id}").present? %>
+
+          
+          <tr>
+            <td width="75%" class="textAlignLeft"><%= link_to_project projects_sub_side_values %></td>
+            <td class="textAlignLeft">
+            
+            <%= l_hours(@total_hours_side) %>
+
+            </td>
+          </tr>
+
+          <% end %>
+
+          <% elsif User.current.admin? %>
+
+          <tr>
+            <td width="75%" class="textAlignLeft"><%= link_to_project projects_sub_side_values %></td>
+            <td class="textAlignLeft">
+            
+            <%= l_hours(@total_hours_side) %>
+
+            </td>
+          </tr>
+
+          <% elsif Member.where("project_id = #{projects_sub_side_values.id} AND user_id = #{User.current.id}").present? %>
+
+          <tr>
+            <td width="75%" class="textAlignLeft"><%= link_to_project projects_sub_side_values %></td>
+            <td class="textAlignLeft">
+            
+            <%= l_hours(@total_hours_side) %>
+
+            </td>
+          </tr>
+
+          <% end %>
+
+          <% end %>
+
+
+          <!-- sub project block ends -->
+
+          <% end %>
+
+
+        <% end %>
+      </table>
+      <h4 class="calculateResult">Total Time Spent <label>
+      <%= l_hours(count) %>
+      </label></h4>
+    </div>
+  </aside>
+  
+    <div class="clear"></div>
+      
+<% end %>
+
+  <% for projectmain in @projects %>
+  <% @projectmain = projectmain %>
+  <div id="project_updates">
+  <div class="leftInnerSeperateProject">
+
+    <% subproj_tot_count_flag = 0 %>
+    <% subproj_tot_count_flag_updated = 0 %>
+    <% subproj_tot_count_flag_updated_admin = 0 %>
+
+    <% @projects_sub_top = Project.where(:parent_id => @projectmain.id).active %>
+
+    <% for projects_sub_top_values in @projects_sub_top %>
+    
+    <% if Member.where("project_id = #{projects_sub_top_values.id} AND user_id = #{User.current.id}").present? %> 
+
+    <% subproj_tot_count_flag = 1 %>
+
+    <% elsif User.current.admin? %>
+
+    <% if Member.where("project_id = #{projects_sub_top_values.id}").present? %>
+    <% subproj_tot_count_flag_updated_admin = 1 %>
+    <% end %>
+
+     <% end %>
+ 
+    <% end %>
+
+    <% if subproj_tot_count_flag_updated_admin == 0 %>
+
+    <% if subproj_tot_count_flag == 0 %>
+
+    <% if user_in_group > 0 %>
+
+    <% if Member.where("project_id = #{projectmain.id} AND user_id = #{User.current.id}").present? %>
+    <% subproj_tot_count_flag = 1 %>
+    <% subproj_tot_count_flag_updated = 1 %>
+    <% end %>
+
+    <% elsif User.current.admin? %>
+
+    <% if Member.where("project_id = #{projectmain.id}").present? %>
+    <% subproj_tot_count_flag_updated = 1 %>
+    <% end %>
+
+    <% end %>
+
+    <% end %>
+
+    <% end %>
+
+
+ 
+    <% if user_in_group > 0 %>
+
+    <% if subproj_tot_count_flag == 1 %>
+
+  <h1 class="projectTitle"><%= link_to_project projectmain %>
+  </h1>
+
+  <% end %>
+
+    <% elsif User.current.admin? or subproj_tot_count_flag == 1 %>
+
+  <h1 class="projectTitle"><%= link_to_project projectmain %>
+  </h1>
+
+    <% end %>
+
+
+  <% @projects_sub = Project.where(:parent_id => @projectmain.id).active %>
+
+  <% existsFlag = 0; %>
+
+  <% for project in @projects_sub %>
+
+  <% @pro = project %>
+
+  <% existsFlag = 1; %>
+  <% cond = @pro.project_condition(Setting.display_subprojects_issues?) %> 
+  <% @total_hours = TimeEntry.visible.sum(:hours, :conditions => cond).to_f %>
+  <% @users_by_role = @pro.users_by_role %>
+  <% issuecount = 0 %>
+  <% issuecount_total = 0 %>
+  <% @myissues = Issue.where(:project_id => project.id) %>
+  <% if @myissues.present? %>
+  <% for myissue in @myissues %>
+  <% issuecount = issuecount + myissue.done_ratio %>
+  <% issuecount_total = issuecount_total + 1 %>
+  <% end %>
+  <% end %>
+  <% if issuecount != 0 %>
+  <% issuecalc = issuecount/issuecount_total %>
+  <% else %>
+  <% issuecalc = 0 %>
+  <% end %>
+  <% @sprints = Sprint.where(:project_id => @pro.id) %>
+
+  <% if user_in_group > 0 %>
+
+  <% if Member.where("project_id = #{@pro.id} AND user_id = #{User.current.id}").present? %>
+
+   <article class="contentLeftColumn">
+              <article class="contentLeftColumnContent">
+                <h1><%= link_to_project project %></h1>
+                <div class="projectDescriptionpara"><%= textilizable project.short_description, :project => project %></div>
+                <div class="progressField">
+                <h4>Project Completeness <label><%= issuecalc %>%</label></h4>               
+<div class="progressBar">
+  <div class="progressCompleted" role="progressbar" aria-valuenow="<%= issuecalc %>" aria-valuemin="0" aria-valuemax="100" style="width: <%= issuecalc %>%;">
+  </div>
+</div>
+                </div>
+                <article class="projectDetails">
+                  <ul>
+                    <li>
+                      <label class="detailProperty">Project Manager</label>
+                      <label class="detailSeparator">:</label>
+                      <label class="detailValue">
+                      <% if @users_by_role.any? %>
+                        <% @users_by_role.keys.sort.each do |role| %>
+                        <% roletrim = h role %>
+                        <% if roletrim == "Manager" %>
+                        <%= @users_by_role[role].sort.collect{|u| link_to_user u}.join(", ").html_safe %><br />
+                        <% end %>
+                        <% end %>
+                        <% else %>
+                        N/A
+                        <% end %>
+                      </label>
+                    </li>
+                    <li>
+                      <label class="detailProperty">Total time spent</label>
+                      <label class="detailSeparator">:</label>
+                        <label class="detailValue timer">
+                          <%= l_hours(@total_hours) %>
+
+                          </label>
+                    </li>
+                    <li>
+                      <label class="detailProperty">Total Sprints</label>
+                      <label class="detailSeparator">:</label>
+                        <label class="detailValue"><%= @sprints.size %></label>
+                    </li>
+                    </ul>
+                </article>
+                </article>
+            </article>
+
+  <% end %>
+
+  <% elsif User.current.admin? or Member.where("project_id = #{@pro.id} AND user_id = #{User.current.id}").present? %>
+
+  
+
+    <article class="contentLeftColumn">
+              <article class="contentLeftColumnContent">
+                <h1><%= link_to_project project %></h1>
+                <div class="projectDescriptionpara"><%= textilizable project.short_description, :project => project %></div>
+                <div class="progressField">
+                <h4>Project Completeness <label><%= issuecalc %>%</label></h4>               
+<div class="progressBar">
+  <div class="progressCompleted" role="progressbar" aria-valuenow="<%= issuecalc %>" aria-valuemin="0" aria-valuemax="100" style="width: <%= issuecalc %>%;">
+  </div>
+</div>
+                </div>
+                <article class="projectDetails">
+                  <ul>
+                    <li>
+                      <label class="detailProperty">Project Manager</label>
+                      <label class="detailSeparator">:</label>
+                      <label class="detailValue">
+                      <% if @users_by_role.any? %>
+                        <% @users_by_role.keys.sort.each do |role| %>
+                        <% roletrim = h role %>
+                        <% if roletrim == "Manager" %>
+                        <%= @users_by_role[role].sort.collect{|u| link_to_user u}.join(", ").html_safe %><br />
+                        <% end %>
+                        <% end %>
+                        <% else %>
+                        N/A
+                        <% end %>
+                      </label>
+                    </li>
+                    <li>
+                      <label class="detailProperty">Total time spent</label>
+                      <label class="detailSeparator">:</label>
+                        <label class="detailValue timer">
+                          <%= l_hours(@total_hours) %>
+
+                          </label>
+                    </li>
+                    <li>
+                      <label class="detailProperty">Total Sprints</label>
+                      <label class="detailSeparator">:</label>
+                        <label class="detailValue"><%= @sprints.size %></label>
+                    </li>
+                    </ul>
+                </article>
+                </article>
+            </article>
+
+
+            <% end %>
+
+            <% end %>
+
+            <% if subproj_tot_count_flag_updated == 1 %>
+
+              <p>No sub projects created under in this account</p>
+
+              <% end %>
+            
+            
+            </div>
+          </div>
+    <div class="projects"></div>
+<% end %>
+<div class="clear"></div>
+            <%=hidden_field_tag 'project_count', "#{@projects.count}"%>
+
+
+
+            <script type="text/javascript">
+jQuery(document).ready(function($) {
+
+
+    $("#main-menu").hide();
+    
+  
+  });
+
+</script>
+
+<% html_title(l(:label_dashboard)) -%>
+  

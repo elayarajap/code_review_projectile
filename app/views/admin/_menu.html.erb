@@ -1,0 +1,15 @@
+<aside class="contentRightColumn borderRadiusNone" > 
+ 	<div id="admin-menu">
+	  <%= render_menu :admin_menu %>
+	</div>
+</aside>
+
+
+<script type="text/javascript">
+  jQuery(document).ready(function($) {
+
+   $(".selected").parent().addClass("li_selected");
+   $(".selected").removeClass("selected");
+
+  });
+</script>

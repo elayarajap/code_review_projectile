@@ -1,0 +1,105 @@
+    <div id="project_updates">
+      <div class="leftInnerSeperateProject">
+        <% @projects_sub = @all_sub_projects.find_all{|sub_proj| sub_proj.parent_id==@project.id} %>
+        <h1 class="projectTitle"><%#= link_to_project projectmain %>
+        <%= link_to(@project.name, project_time_entries_path(@project)) %>
+        <%= link_to("Create Project", {:controller => 'projects', :action => 'new', :project_id=>@project.id, :project_name=>@project.name}, :class => 'createSubProjectSpan') if User.current.allowed_to?(:create_project, nil, :global => true) %>
+        <%= link_to("Back to Dashboard", home_path, :class => 'createSubProjectSpan') %>
+    </h1>
+    <% existsFlag = 0; %>
+    <% for project in @projects_sub %>
+      <% @pro = project %>
+      <% existsFlag = 1; %>
+      <% @total_hours = TimeEntry.sum_hours(@time_entries.find_all{|entry| entry.project_id==@pro.id}.collect(&:billable))%> 
+      <% @users_by_role = @pro.users_by_role %>
+      <% issuecount = 0 %>
+      <% issuecount_total = 0 %>
+      <% @myissues = @all_isses.find_all{|issue| issue.project_id == project.id} %>
+      <% if @myissues.present? %>
+        <% for myissue in @myissues %>
+      <% issuecount = issuecount + myissue.done_ratio %>
+    <% issuecount_total = issuecount_total + 1 %>
+        <% end %>
+      <% end %>
+      <% if issuecount != 0 %>
+        <% issuecalc = issuecount/issuecount_total %>
+      <% else %>
+        <% issuecalc = 0 %>
+      <% end %>
+      <% @sprints = @all_sprints.find_all{|sprint| sprint.project_id==@pro.id} %>
+
+     <% delay = 0%>
+      <% if !@sprints.empty? %>
+      <% for sprint in @sprints %>
+
+     <%
+      @issues_task = @all_issues.find_all{|item| item.tracker_id==2}
+      @issues_bugs = @all_issues.find_all{|item| item.tracker_id==1}
+     %>
+
+     <%if @issues_bugs.count !=0 || @issues_task.count !=0 %>
+          <%unless sprint.effective_date.nil? %>
+            <%if Date.today > sprint.effective_date %>
+            <% delay = 1%>
+            <% end %>
+          <% end %>
+      <% end %>
+     <% end %>
+     <% end %>
+      <article class="contentLeftColumn">
+      	<%if delay == 1%>
+              <article class="contentLeftColumnContent" style="background-color : #D44942;" >
+          <%else%>
+              <article class="contentLeftColumnContent"  >
+         <%end%>
+                <h1><%= link_to_project project %></h1>
+                <div class="projectDescriptionpara"><%= textilizable project.short_description[0,90].gsub(/\s\w+$/,'...'), :project => project %></div>
+                <div class="progressField">
+                  <h4>Project Completeness <label><%= issuecalc %>%</label></h4>               
+        <div class="progressBar">
+        <div class="progressCompleted" role="progressbar" aria-valuenow="<%= issuecalc %>" aria-valuemin="0" aria-valuemax="100" style="width: <%= issuecalc %>%;">
+          </div>
+      </div>
+                </div>
+                <article class="projectDetails">
+                  <ul>
+                    <li>
+                      <label class="detailProperty">Project Manager</label>
+                      <label class="detailSeparator">:</label>
+                      <label class="detailValue">
+                      <% if @users_by_role.any? %>
+                        <% @users_by_role.keys.sort.each do |role| %>
+                          <% roletrim = h role %>
+                          <% if roletrim == "Manager" %>
+                            <%= @users_by_role[role].sort.collect{|u| link_to_user u}.join(", ").html_safe %><br />
+                          <% end %>
+                        <% end %>
+                        <% else %>
+                          N/A
+                        <% end %>
+                      </label>
+                    </li>
+                    <li>
+                      <label class="detailProperty">Total time spent</label>
+                      <label class="detailSeparator">:</label>
+                        <label class="detailValue timer">
+                          <%= TimeEntry.calculate_time(l_hours(@total_hours)) %>
+                        </label>
+                    </li>
+                    <li>
+                      <label class="detailProperty">Total Sprints</label>
+                      <label class="detailSeparator">:</label>
+                      <label class="detailValue"><%= @sprints.size %></label>
+                    </li>
+                    </ul>
+                </article>
+              </article>
+            </article>
+          <% end %>
+          <% if  @projects_sub.size==0%>
+            <p class="noSubProject">No sub projects available</p>
+          <% end %>
+        </div>
+      </div>
+      <div class="projects"></div>
+   

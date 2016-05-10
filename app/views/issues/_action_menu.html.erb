@@ -1,0 +1,10 @@
+<div class="contextual">
+	<% issue_status = "#{@issue.status}"  
+	  if issue_status != "Closed" || User.current.admin? ||  User.current.allowed_to?(:manage_versions, @project)  %>
+	  <% if getSprintStatus(@issue.fixed_version_id)%>
+		<%= link_to l(:button_update), edit_issue_path(@issue), :onclick => 'showAndScrollToDiv("update", "showdet", "issue_notes"); return false;', :class => 'icon icon-edit', :accesskey => accesskey(:edit) if @issue.editable? && User.current.allowed_to?(:edit_issues, @project) %>
+		<%= link_to l(:button_log_time), new_issue_time_entry_path(@issue), :class => 'icon icon-time-add' if User.current.allowed_to?(:log_time, @project) %>
+	  <% end %>
+		<%= link_to l(:button_delete), issue_path(@issue, :tid=> @issue.tracker_id), :data => {:confirm => issues_destroy_confirmation_message(@issue)}, :method => :delete, :class => 'icon icon-del' if User.current.allowed_to?(:delete_issues, @project) %>
+	<% end %>
+</div>

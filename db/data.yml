@@ -1,0 +1,479 @@
+
+---
+directories:
+  columns:
+  - id
+  - project_id
+  - name
+  records: 
+  - - 1
+    - 1
+    - others
+
+---
+enabled_modules:
+  columns:
+  - id
+  - project_id
+  - name
+  records: 
+  - - 1
+    - 1
+    - issue_tracking
+  - - 2
+    - 1
+    - time_tracking
+  - - 3
+    - 1
+    - news
+  - - 4
+    - 1
+    - documents
+  - - 5
+    - 1
+    - files
+  - - 6
+    - 1
+    - wiki
+  - - 7
+    - 1
+    - repository
+  - - 8
+    - 1
+    - boards
+  - - 9
+    - 1
+    - calendar
+  - - 10
+    - 1
+    - gantt
+
+---
+issue_statuses:
+  columns:
+  - id
+  - name
+  - is_closed
+  - is_default
+  - position
+  - default_done_ratio
+  records: 
+  - - 1
+    - open
+    - false
+    - true
+    - 1
+    - 
+  - - 2
+    - closed
+    - true
+    - false
+    - 2
+    - 
+
+---
+projects:
+  columns:
+  - id
+  - name
+  - description
+  - homepage
+  - is_public
+  - parent_id
+  - created_on
+  - updated_on
+  - identifier
+  - status
+  - lft
+  - rgt
+  - inherit_members
+  records: 
+  - - 1
+    - general activity
+    - ''
+    - ''
+    - true
+    - 
+    - 2014-01-20 19:49:54.000000000 +05:30
+    - 2014-01-20 19:49:54.000000000 +05:30
+    - general-activity
+    - 1
+    - 1
+    - 2
+    - false
+
+---
+projects_trackers:
+  columns:
+  - project_id
+  - tracker_id
+  records: 
+  - - 1
+    - 1
+  - - 1
+    - 2
+
+---
+roles:
+  columns:
+  - id
+  - name
+  - position
+  - assignable
+  - builtin
+  - permissions
+  - issues_visibility
+  records: 
+  - - 1
+    - Non member
+    - 1
+    - true
+    - 1
+    - 
+    - default
+  - - 2
+    - Anonymous
+    - 2
+    - true
+    - 2
+    - 
+    - default
+  - - 3
+    - Manager
+    - 3
+    - false
+    - 0
+    - ! '---
+
+      - :add_project
+
+      - :edit_project
+
+      - :close_project
+
+      - :select_project_modules
+
+      - :manage_members
+
+      - :manage_versions
+
+      - :add_subprojects
+
+      - :manage_boards
+
+      - :add_messages
+
+      - :edit_messages
+
+      - :edit_own_messages
+
+      - :delete_messages
+
+      - :delete_own_messages
+
+      - :view_calendar
+
+      - :add_documents
+
+      - :edit_documents
+
+      - :delete_documents
+
+      - :view_documents
+
+      - :manage_files
+
+      - :view_files
+
+      - :view_gantt
+
+      - :manage_categories
+
+      - :view_issues
+
+      - :add_issues
+
+      - :edit_issues
+
+      - :manage_issue_relations
+
+      - :manage_subtasks
+
+      - :set_issues_private
+
+      - :set_own_issues_private
+
+      - :add_issue_notes
+
+      - :edit_issue_notes
+
+      - :edit_own_issue_notes
+
+      - :view_private_notes
+
+      - :set_notes_private
+
+      - :move_issues
+
+      - :delete_issues
+
+      - :manage_public_queries
+
+      - :save_queries
+
+      - :view_issue_watchers
+
+      - :add_issue_watchers
+
+      - :delete_issue_watchers
+
+      - :manage_news
+
+      - :comment_news
+
+      - :manage_repository
+
+      - :browse_repository
+
+      - :view_changesets
+
+      - :commit_access
+
+      - :manage_related_issues
+
+      - :view_issue
+
+      - :log_time
+
+      - :view_time_entries
+
+      - :edit_time_entries
+
+      - :edit_own_time_entries
+
+      - :manage_project_activities
+
+      - :manage_wiki
+
+      - :rename_wiki_pages
+
+      - :delete_wiki_pages
+
+      - :view_wiki_pages
+
+      - :export_wiki_pages
+
+      - :view_wiki_edits
+
+      - :edit_wiki_pages
+
+      - :delete_wiki_pages_attachments
+
+      - :protect_wiki_pages
+
+'
+    - default
+
+---
+trackers:
+  columns:
+  - id
+  - name
+  - is_in_chlog
+  - position
+  - is_in_roadmap
+  - fields_bits
+  records: 
+  - - 1
+    - Bug
+    - false
+    - 1
+    - true
+    - 0
+  - - 2
+    - Feature
+    - false
+    - 2
+    - true
+    - 0
+
+---
+user_preferences:
+  columns:
+  - id
+  - user_id
+  - others
+  - hide_mail
+  - time_zone
+  records: 
+  - - 1
+    - 1
+    - ! '--- {}
+
+'
+    - false
+    - 
+
+---
+users:
+  columns:
+  - id
+  - login
+  - hashed_password
+  - firstname
+  - lastname
+  - mail
+  - admin
+  - status
+  - last_login_on
+  - language
+  - auth_source_id
+  - created_on
+  - updated_on
+  - type
+  - identity_url
+  - mail_notification
+  - salt
+  records: 
+  - - 1
+    - admin
+    - e9b930b5f45cf2e06dea546cced3d090ae52bc93
+    - Redmine
+    - Admin
+    - admin@example.net
+    - true
+    - 1
+    - 
+    - ''
+    - 
+    - 2014-01-20 19:47:13.000000000 +05:30
+    - 2014-01-20 19:47:13.000000000 +05:30
+    - User
+    - 
+    - all
+    - 892dcb843b00b58dd460585ef2bc4245
+  - - 2
+    - ''
+    - ''
+    - ''
+    - Managers
+    - ''
+    - false
+    - 1
+    - 
+    - ''
+    - 
+    - 2014-01-20 19:51:32.000000000 +05:30
+    - 2014-01-20 19:51:32.000000000 +05:30
+    - Group
+    - 
+    - ''
+    - 
+
+---
+wikis:
+  columns:
+  - id
+  - project_id
+  - start_page
+  - status
+  records: 
+  - - 1
+    - 1
+    - Wiki
+    - 1
+
+---
+workflows:
+  columns:
+  - id
+  - tracker_id
+  - old_status_id
+  - new_status_id
+  - role_id
+  - assignee
+  - author
+  - type
+  - field_name
+  - rule
+  records: 
+  - - 5
+    - 1
+    - 1
+    - 1
+    - 3
+    - false
+    - false
+    - WorkflowTransition
+    - 
+    - 
+  - - 6
+    - 1
+    - 1
+    - 2
+    - 3
+    - false
+    - false
+    - WorkflowTransition
+    - 
+    - 
+  - - 7
+    - 1
+    - 2
+    - 1
+    - 3
+    - false
+    - false
+    - WorkflowTransition
+    - 
+    - 
+  - - 8
+    - 1
+    - 2
+    - 2
+    - 3
+    - false
+    - false
+    - WorkflowTransition
+    - 
+    - 
+  - - 9
+    - 2
+    - 1
+    - 1
+    - 3
+    - false
+    - false
+    - WorkflowTransition
+    - 
+    - 
+  - - 10
+    - 2
+    - 1
+    - 2
+    - 3
+    - false
+    - false
+    - WorkflowTransition
+    - 
+    - 
+  - - 11
+    - 2
+    - 2
+    - 1
+    - 3
+    - false
+    - false
+    - WorkflowTransition
+    - 
+    - 
+  - - 12
+    - 2
+    - 2
+    - 2
+    - 3
+    - false
+    - false
+    - WorkflowTransition
+    - 
+    - 

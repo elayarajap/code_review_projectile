@@ -1,0 +1,10 @@
+<% client_names = ""
+	@clients.each do |client|
+		slash = (@clients.last == client) ? "" : " / "
+		client_names = client_names + "#{client.firstname} #{client.lastname}".capitalize + slash
+end%>
+Hi <%=client_names%>, <br><br>
+
+Please find below a secured link to access the <b><%=@document_name.capitalize%></b> document for the <b><%=@project_name.capitalize%></b> project. <br><br>
+
+You may have to login using your credentials to view the document and approve it. <a href= '<%= @url %>' > Approve now </a> <br>

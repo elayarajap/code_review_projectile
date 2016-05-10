@@ -1,0 +1,36 @@
+<% unless params[:new_log]%>
+	<h2 class="title"><%= l(:label_spent_time) %></h2>
+
+	<%= labelled_form_for @time_entry, :url => time_entries_path do |f| %>
+	  <%= hidden_field_tag 'project_id', params[:project_id] if params[:project_id] %>
+	  <%= render :partial => 'form', :locals => {:f => f} %>
+	  <%= submit_tag l(:button_create),:class=>'blueBtn' %>
+	  <%# submit_tag l(:button_create_and_continue),:class=>'greenBtn', :name => 'continue' %>
+	<% end %>
+<% else %>
+	<%= labelled_form_for @time_entry, :url => time_entries_path, :remote => true do |f| %>
+		<%= hidden_field_tag 'project_id', params[:project_id] if params[:project_id] %>
+		<%= hidden_field_tag 'issue_id', params[:issue_id] if params[:issue_id] %>
+		<%= render :partial => 'log_form', :locals => {:f => f} %>
+	<% end %>
+<% end %>
+<%= render :partial => 'projects/add_sprint_close_project' %>
+<%# content_for :sidebar do %>
+
+<%#= render :partial => 'layouts/timelog_sidebar', :locals => {:total_hours => total_hours ||= @total_hours} %>
+
+<%# end %>
+
+<script type="text/javascript">
+  jQuery(document).ready(function($) {
+
+<% unless @issue.nil?%>
+	<%if issue_heading(@issue).include?("Bug") %>
+  		$('.bugs').addClass('selected');
+    <%else%>
+  		$('.todo').addClass('selected');
+    <%end%>
+<%end%>
+
+    });
+</script>

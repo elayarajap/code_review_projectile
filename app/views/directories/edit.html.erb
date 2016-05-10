@@ -1,0 +1,25 @@
+<h2 class="title">Edit	 directory</h2>
+<%= form_tag({ :controller => 'directories', :action => 'update', :project_id => @project }, :method => :put) do %>
+<div class="box tabular">
+  <p><%= text_field_tag 'name', @directoryinfo.name %></p>
+</div>
+
+<%= hidden_field_tag 'id', @directoryinfo.id %>
+<%= submit_tag l(:button_update),:class=>'greenBtn' %>
+<% end %>
+
+<%# content_for :sidebar do %>
+
+<%#= render :partial => 'layouts/projects_sidebar' %>
+
+<%# end %>
+
+<script type="text/javascript">
+  jQuery(document).ready(function($) {
+
+<%if params[:controller].to_s=="directories"%>
+  $('.files').addClass('selected');
+    <%end%>
+
+    });
+</script>

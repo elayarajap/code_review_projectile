@@ -1,0 +1,34 @@
+<h2 class="title">Edit Meeting</h2>
+
+<div id="meeting">
+<div id="createMeeting">
+<%= form_tag({ :controller => 'projects', :action => 'update_meeting', :project_id => @project }, :method => :put) do %>
+<div class="box tabular">
+  <p>
+  	<%= select("","meeting_type_id", @meetingtype.collect {|p| [ p.name, p.id ] }, :selected =>@meeting.meeting_type_id) %>
+  	<%= text_field_tag 'title', @meeting.title %>
+  	<%= text_field_tag 'discussion_summary', @meeting.discussion_summary %>
+  	<input id="txt_datetime" name="datetime" type="text" readonly="true" value="<%= @meeting.date%> <%= @meeting.time%>" placeholder='Pick Date Time' >
+  	<%= submit_tag l(:button_update),:class=>'greenBtn' %>
+  </p>
+</div>
+
+<% end %>
+</div>
+</div>
+
+
+<script type="text/javascript">
+$(document).ready(function(){
+	$('#txt_datetime').datetimepicker({format:'d/m/Y H:i',minDate: Date(),onSelectDate:function(){
+		//$('#txt_datetime').removeClass('error_bg')
+}});
+	/*$('.new_event input:text,.new_event select').change(function(){		
+		if( $(this).val()!="" ) {
+	    	$(this).removeClass('error_bg');
+	    }
+	});*/
+
+
+});
+</script>

@@ -1,0 +1,48 @@
+<%= labelled_form_for @issue, :html => {:id => 'issue-form', :multipart => true} do |f| %>
+    <%= error_messages_for 'issue', 'time_entry' %>
+    <%= render :partial => 'conflict' if @conflict %>
+    <div class="box">
+    <% if @edit_allowed || !@allowed_statuses.empty? %>
+        <div class="tabular"><!--<legend><%= l(:label_change_properties) %></legend>-->
+        <div id="all_attributes">
+        <%= render :partial => 'form_update', :locals => {:f => f} %>
+        </div>
+        </div>
+    <% end %>
+    
+    </div>
+
+    <%= f.hidden_field :lock_version %>
+    <%= hidden_field_tag 'last_journal_id', params[:last_journal_id] || @issue.last_journal_id %>
+    <br>
+    
+    <%= submit_tag l(:button_submit),:class=>'greenBtn' %>
+<% end %>
+
+<div id="preview" class="wiki"></div>
+
+<script type="text/javascript">
+  jQuery(document).ready(function($) {
+    $("#issue_tracker_id").parent().hide();
+    $("#issue_project_id").parent().hide();
+    $("#issue_subject").css("width","50%");
+ 
+    $("#issue_custom_field_values_6").keydown(function (e) {
+        // Allow: backspace, delete, tab, escape, enter and .
+        if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 190]) !== -1 ||
+             // Allow: Ctrl+A
+            (e.keyCode == 65 && e.ctrlKey === true) || 
+             // Allow: home, end, left, right
+            (e.keyCode >= 35 && e.keyCode <= 39)) {
+                 // let it happen, don't do anything
+                 return;
+        }
+        // Ensure that it is a number and stop the keypress
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 53)) && (e.keyCode < 96 || e.keyCode > 101)) {
+            e.preventDefault();
+        }
+        if($(this).val()!="")
+            e.preventDefault();        
+    });
+  });
+</script>

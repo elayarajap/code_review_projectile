@@ -1,0 +1,18 @@
+<h2 class="title"><%= link_to l(:label_role_plural), roles_path %> &#187; <%=l(:label_role_new)%></h2>
+
+<%= labelled_form_for @role do |f| %>
+	<div class="mediumLabelWidth">
+		<%= render :partial => 'form', :locals => { :f => f } %>
+		<%= submit_tag l(:button_create),:class=>'greenBtn' %>
+	</div>
+<% end %>
+
+
+<script type="text/javascript">
+ jQuery(document).ready(function($) {
+
+   var role_assignable = $("#role_assignable");
+   $("#role_assignable").parent().children("label").prepend(role_assignable);
+  
+ 	});
+</script>

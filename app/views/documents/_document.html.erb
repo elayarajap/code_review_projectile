@@ -1,0 +1,96 @@
+<article class="TableContent" id="article_id">
+<h2><%= category.name%></h2>
+<% if !documents.empty? %>
+  <table cellspacing="1" width="100%" class="formTable">
+        <tr>
+            <th>Title</th>
+            <th class="cnter" width="10%">Date</th>
+            <th class="cnter">File</th>
+            <th class="cnter">Action</th>
+        </tr>
+        <% documents.each do |document|%>
+        <%attachment = document.attachments.last%>
+        <%if !find_project_clients(@project,document).map(&:user_id).include?(User.current.id) || document.status != nil%>
+        <%if document.status == 'request' %>
+         <tr class="odd">
+	             <td class="textAlignLeft"><%= link_to h(document.title), document_path(document) %></td>
+                 <td class="textAlignLeft"  width="15%"><%= format_time(document.updated_on) %></td>
+                 <td class="textAlignLeft"><%= link_to attachment.try(:filename), url_for(:controller => 'attachments', :action => 'download', :id => attachment, :filename => attachment.try(:filename), :only_path => false) if attachment.present? %></td>
+                <% if document.client_id != User.current.id %>
+                  <td class="textAlignLeft">
+                    <center>
+                    <a class="ActionIcons" href="#"  title="Already sent for approval"><img src= "<%= Setting.app %>/images/sentforApproval.png" alt="Already sent for approval">
+                    </a>
+                <%end%>
+         <%end%>
+
+		
+         <%if document.status == 'rejected' %>
+            <tr class="odd rejected">
+		         <td class="textAlignLeft"><%= link_to h(document.title), document_path(document) %></td>
+                 <td class="textAlignLeft"  width="15%"><%= format_time(document.updated_on) %></td>
+                 <td class="textAlignLeft"><%= link_to attachment.try(:filename), url_for(:controller => 'attachments', :action => 'download', :id => attachment, :filename => attachment.try(:filename), :only_path => false) if attachment.present?%></td>
+                 <% if document.client_id != User.current.id %>
+                    <td class="textAlignLeft">
+                    <center>
+                    <%= link_to image_tag("/images/sendforApproval.png", :alt => 'send for approval'), send_for_approval_document_path(document), :class => 'ActionIcons', :id =>'mail_reject_link', :title=>"Send for approval" %> 
+                <%end%>
+         <%end%>
+
+		
+		<% if document.status == 'approved' %>
+            <tr class="odd accepted">
+	             <td class="textAlignLeft"><%= link_to h(document.title), document_path(document) %></td>
+                 <td class="textAlignLeft"  width="15%"><%= format_time(document.updated_on) %></td>
+                 <td class="textAlignLeft"><%= link_to attachment.try(:filename), url_for(:controller => 'attachments', :action => 'download', :id => attachment, :filename => attachment.try(:filename), :only_path => false) if attachment.present? %></td>
+                  <td class="textAlignLeft">
+                  <center>
+                  <span class="EmptyBox"></span>
+         <%end%>
+
+		
+		<% if !document.status.present? %>
+                 <tr class="odd">
+                 <td class="textAlignLeft"><%= link_to h(document.title), document_path(document) %></td>
+                 <td class="textAlignLeft"  width="15%"><%= format_time(document.updated_on) %></td>
+                 <td class="textAlignLeft"><%= link_to attachment.try(:filename), url_for(:controller => 'attachments', :action => 'download', :id => attachment, :filename => attachment.try(:filename), :only_path => false) if attachment.present? %></td>
+                 <td class="textAlignLeft">
+                 <center>
+                 <% if @document.attachments.present? %>   
+                    <%= link_to image_tag("/images/sendforApproval.png", :alt => 'send for approval'), send_for_approval_document_path(document), :class => 'ActionIcons',  :title=>"Send for approval" %>
+                 <% else %>
+                    <span class="EmptyBox"></span> 
+                 <% end %>
+         <%end%>
+
+         <% if document.status != 'approved' %>
+
+             <% if User.current.allowed_to?(:edit_documents, @project) %>
+               <%= link_to image_tag("/images/editNew.png", :alt => 'edit'), edit_document_path(document), :class => 'ActionIcons', :title => "edit" %>
+             <% end %>
+             <% if User.current.allowed_to?(:delete_documents, @project) %>
+             <%= link_to image_tag("/images/deleteNew.png", :alt => 'delete'), document_path(document), :class => 'ActionIcons', :title => "delete", :confirm => 'Are you sure?', :method => :delete %>
+             <% end %>
+
+        <% end %>    
+
+
+            </center>
+            </td>
+        </tr>
+        <%end%>
+        <%end%>
+                                                                      
+        
+    </table>
+</article>
+<%end%>
+
+<% if documents.empty? %>
+No Documents Available
+<%end%>
+</article>
+
+
+
+

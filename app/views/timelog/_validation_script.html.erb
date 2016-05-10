@@ -1,0 +1,160 @@
+<script>
+function fnChangeBillableNonBillable(entry_id,type)
+{  
+  if(type=='billable')
+  {
+  	<%if page_type=="unapproved"%>
+	    var element = $("#txt_bh_"+entry_id);
+	    var target_element = $("#txt_nbh_"+entry_id);
+    <%else%>
+	    var element = $("#time_entry_billable");
+	    var target_element = $("#time_entry_non_billable");
+    <%end%>   
+  }
+  else
+  {
+  	<%if page_type=="unapproved"%>
+	    var element = $("#txt_nbh_"+entry_id);
+	    var target_element = $("#txt_bh_"+entry_id);
+    <%else%>
+	    var element = $("#time_entry_non_billable");
+	    var target_element = $("#time_entry_billable");
+    <%end%>
+  }
+  var modified_value = parseFloat((element.attr('entryHours') - element.val())).toFixed(2);
+  target_element.val(modified_value);
+  var modified_string = modified_value + "";
+  if (parseFloat(element.attr('entryHours')).toFixed(2)==parseFloat(element.val()).toFixed(2))
+  {
+    target_element.val('0.00');
+  }
+  else if (parseFloat(element.attr('entryHours')).toFixed(2)==1)
+  {    
+    if(parseFloat(element.val())==0 || parseFloat(element.val())== '0.00')
+      target_element.val((parseFloat(element.attr('entryHours'))).toFixed(2));
+  }
+}
+$(document).on("blur", "input.billing", function () { 
+
+    var inptval = this.value;
+
+    if(this.value=="0")
+    {
+      inptval = "0.0";
+    } 
+debugger
+    if(inptval!=this.defaultValue)
+    { 
+      this.value = parseFloat(this.value).toFixed(2);
+      var firstcondition = parseFloat(this.value);      
+      var entry_id = $(this).attr('entryId');      
+      var modified_string = this.value + ""; 
+      if(isNaN(parseFloat(this.value)))
+      { 
+        if($(this).hasClass('billable'))           
+          fnChangeBillableNonBillable(entry_id,'non_billable');
+        else
+          fnChangeBillableNonBillable(entry_id,'billable');
+      }
+      else if(firstcondition > parseFloat($(this).attr('entryHours')))
+      {
+        //Currently entered value is invalid, since comparing with its pair value to retain previous value
+        if($(this).hasClass('billable'))           
+          fnChangeBillableNonBillable(entry_id,'non_billable');
+        else
+          fnChangeBillableNonBillable(entry_id,'billable');          
+      }
+      else if(parseFloat(this.value) == 0.0 && this.defaultValue>0)
+      {
+        //Currently entered value is invalid, since comparing with its pair value to retain previous value
+        // if($(this).hasClass('billable')) 
+        //   $("#txt_nbh_"+entry_id).val($("#txt_bh_"+entry_id).prop("defaultValue")); 
+        // else
+        //   $("#txt_bh_"+entry_id).val($("#txt_nbh_"+entry_id).prop("defaultValue"));
+         if($(this).hasClass('billable')) 
+          $("#txt_nbh_"+entry_id).val($("#txt_bh_"+entry_id).attr("entryhours")); 
+        else
+          $("#txt_bh_"+entry_id).val($("#txt_nbh_"+entry_id).attr("entryhours"));
+      }
+      else if(modified_string.indexOf('.')!= -1)      
+      {
+        if((parseInt(modified_string.split('.')[1]).toFixed(2)==25) || (parseInt(modified_string.split('.')[1]).toFixed(2)==50) || (parseInt(modified_string.split('.')[1]).toFixed(2)==75) || (parseInt(modified_string.split('.')[1]).toFixed(2)==0))
+        {          
+          if($(this).hasClass('billable'))           
+            fnChangeBillableNonBillable(entry_id,'billable');
+          else
+            fnChangeBillableNonBillable(entry_id,'non_billable');         
+        }
+        else
+        {
+          alert('Minutes will accept only 25, 50 or 75');
+          //Currently entered value is invalid, since comparing with its pair value to retain previous value
+          if($(this).hasClass('billable'))           
+            fnChangeBillableNonBillable(entry_id,'non_billable');
+          else
+            fnChangeBillableNonBillable(entry_id,'billable');          
+        }
+      }
+      else //if($(this).value!="")
+      {
+        if($(this).hasClass('billable'))           
+          fnChangeBillableNonBillable(entry_id,'billable');
+        else
+          fnChangeBillableNonBillable(entry_id,'non_billable');
+      }
+    }    
+});
+$(document).ready(function(){
+
+  $("input.billing").keydown(function (event) {
+    if (event.shiftKey == true) {
+        event.preventDefault();
+    }
+
+    if(event.keyCode !=8 && event.keyCode != 37 && event.keyCode != 39) 
+    {
+      if(this.value.length > 5)
+      {
+        event.preventDefault();
+      }
+    }
+
+    if ((event.keyCode >= 48 && event.keyCode <= 57) || 
+        (event.keyCode >= 96 && event.keyCode <= 105) || 
+        event.keyCode == 8 || event.keyCode == 9 || event.keyCode == 37 ||
+        event.keyCode == 39 || event.keyCode == 46 || 
+        event.keyCode == 190 || event.keyCode == 110 ||
+        (event.keyCode == 18 && event.keyCode == 69))
+    {  
+      //Allow only numbers and other necessary action keys
+    }
+    else{
+      event.preventDefault();
+    }
+
+    if($(this).val().indexOf('.') !== -1 && (event.keyCode == 190 || event.keyCode == 110))
+        event.preventDefault(); 
+    //if a decimal has been added, disable the "." as we should allow only single decimal point
+
+    if(event.keyCode !=8 && event.keyCode != 37 && event.keyCode != 39) 
+    {
+      if(this.value % 1 === 0)
+      {
+        // Pure integers
+      }
+      else
+      {
+        var decimalval = this.value.split(".");
+        var floatcount = decimalval[1];
+
+        if(floatcount.length > 1)
+        { 
+        event.preventDefault();
+        }
+      }
+    }
+
+
+  });
+});
+</script>

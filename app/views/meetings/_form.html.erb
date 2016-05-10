@@ -1,0 +1,223 @@
+<%= form_for [@project, @new_meeting] do |f| %>
+
+<div class="box tabular">
+	<table class="formTable newDirectoryTable">
+		
+		<tr>
+			<td class="textAlignLeft">
+				Meeting Title: *
+			</td>
+			<td class="textAlignLeft">
+				<%= f.text_field(:title, :placeholder => 'Title') %>
+			</td>
+		</tr>
+		<tr>
+			<td class="textAlignLeft" style="vertical-align:top">
+				Discussion Summary: *
+			</td>
+			<td class="textAlignLeft">
+				<%= f.text_area(:discussion_summary, size: "24x15", :class=>'jqte-test') %>
+			</td>
+		</tr>
+		<tr>
+			<td class="textAlignLeft" style="vertical-align:top">
+				Action items:
+			</td>
+			<td class="textAlignLeft">
+				<%= f.fields_for :action_items do |builder| %>
+                  <%= render "action_item_fields", :f => builder %>
+                <% end %>
+                <p><%= link_to_add_fields "Add Action Item"	, f, :action_items %></p>
+            </td>
+			
+		</tr>
+		<tr>
+		  <td class="textAlignLeft"> Select attendees:</td>
+          <td class="textAlignLeft"><span style=""><%= f.select(:attendees, options_for_select(@users), {}) %><span class="toggle-multiselect" title="Select Multiple">&nbsp;</span></span>
+
+          </td>
+        </tr>
+
+
+        <tr>
+			<td class="textAlignLeft" style="vertical-align:top">
+				Custom attendees:
+			</td>
+			<td class="textAlignLeft">
+				<%= f.fields_for :custom_attendees do |builder| %>
+                  <%= render "custom_attendee_fields", :f => builder %>
+                <% end %>
+                <p><%= link_to_add_fields "Add more attendees"	, f, :custom_attendees %></p>
+            </td>
+			
+		</tr>
+        
+        <tr>
+			<td class="textAlignLeft">
+				Notify custom email:
+			</td>
+			<td class="textAlignLeft">
+				<%= f.text_field(:custom_emails, :placeholder => 'enter emails with comma seperated', :value => params["meeting"] ? params["meeting"]["custom_emails"] : "") %>
+			</td>
+		</tr>
+
+		<tr>
+			<td class="textAlignLeft">
+				Start date and time: *
+			</td>
+		<%if @new_meeting.date.present? %>
+			<td class="textAlignLeft">
+				<input id="txt_datetime" name="datetime" type="text" readonly="true" placeholder='Pick Date Time' value="<%=@new_meeting.date + ' '+ @new_meeting.time %>">
+			</td>
+			<%else%>
+			<td class="textAlignLeft">
+				<input id="txt_datetime" name="datetime" type="text" readonly="true" placeholder='Pick Date Time'>
+			</td>
+			<%end%>
+		</tr>
+		
+
+		<tr>
+			<td class="textAlignLeft">
+				End date and time: *
+			</td>
+		<%if @new_meeting.end_date.present? %>
+			<td class="textAlignLeft">
+				<input id="txt_enddatetime" name="enddatetime" type="text" readonly="true" placeholder='Pick Date Time' value="<%=@new_meeting.end_date + ' '+ @new_meeting.end_time %>">
+			</td>
+			<%else%>
+			<td class="textAlignLeft">
+				<input id="txt_enddatetime" name="enddatetime" type="text" readonly="true" placeholder='Pick Date Time'>
+			</td>
+			<%end%>
+		</tr>
+		<tr>
+			<td class="textAlignLeft">
+				&nbsp;
+			</td>
+			<td class="textAlignLeft">
+				<%= f.submit((l(:button_save))+" & Send Email",:class=>'greenBtn') %>
+			</td>
+		</tr>
+	</table>
+</div>
+
+<% end %>
+</div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function(){
+// Date validation from and to
+
+$('#txt_datetime').datetimepicker({format:'d/m/Y H:i',allowBlank:true,maxDate: Date(),onChangeDateTime:function(){
+ var dateTime = $('#txt_datetime').datetimepicker('getDate').val();
+ var onlyDate = dateTime.split(" ")[0];
+ var onlyTime = dateTime.split(" ")[1];
+ var endDateTime = $('#txt_enddatetime').datetimepicker('getDate').val();
+ var endDate = endDateTime.split(" ")[0];
+ var endTime = endDateTime.split(" ")[1];
+
+
+// Incremental value for time range
+ var increment_hour = 1;
+ var get_firstval_time = onlyTime.split(":")[0];
+ var get_secondval_time = onlyTime.split(":")[1];
+ var int_onlyTime = parseInt(get_firstval_time);
+ var inc_result = int_onlyTime+increment_hour;
+ var onlyTime_final = inc_result+":"+get_secondval_time;
+// Incremental value for time range ends here
+
+ /*var dateTime_increment = $('#txt_datetime').datetimepicker('getTime').val();
+ var onlyDate_increment = dateTime_increment.split(" ")[0];
+ var onlyTime_increment = dateTime_increment.split(" ")[1];
+
+ console.log('increment value'+dateTime_increment);*/
+
+ $('#txt_enddatetime').datetimepicker({
+   formatDate:'d/m/Y',
+   minDate:onlyDate,
+   minTime:onlyTime_final
+ });
+    if((endDate!='' && onlyDate!='')&&(endDate == onlyDate)){
+		$('#txt_datetime').datetimepicker({
+		  formatDate:'d/m/Y',
+		  maxDate:onlyDate, 
+		  maxTime:endTime
+	 });	 
+	} else if(endDate != "") {
+		$('#txt_datetime').datetimepicker({
+		  formatDate:'d/m/Y',
+		  maxDate:endDate, 
+		  maxTime:'24:00'
+	 });	
+	}
+}});
+
+$('#txt_enddatetime').datetimepicker({format:'d/m/Y H:i',allowBlank:true,maxDate: Date(),onChangeDateTime:function(){
+ var dateTime = $('#txt_enddatetime').datetimepicker('getDate').val();
+ var onlyDate = dateTime.split(" ")[0];
+ var onlyTime = dateTime.split(" ")[1];
+ var startDateTime = $('#txt_datetime').datetimepicker('getDate').val();
+ var startDate = startDateTime.split(" ")[0];
+ var startTime = startDateTime.split(" ")[1];
+
+ var startTime_final;
+
+ // Incremental value for time range
+ if($('#txt_datetime').val()!='')
+ {
+ var increment_hour = 1;
+ var get_firstval_time = startTime.split(":")[0];
+ var get_secondval_time = startTime.split(":")[1];
+ var int_onlyTime = parseInt(get_firstval_time);
+ var inc_result = int_onlyTime+increment_hour;
+ startTime_final = inc_result+":"+get_secondval_time;
+}
+else
+{
+startTime_final = startTime;
+}
+// Incremental value for time range ends here
+
+
+$('#txt_datetime').datetimepicker({
+	  formatDate:'d/m/Y',
+	  maxDate:onlyDate, 
+	  maxTime:onlyTime
+ });
+	if((startDate!='' && onlyDate!='')&&(startDate == onlyDate)){
+		 $('#txt_enddatetime').datetimepicker({
+		   formatDate:'d/m/Y',
+		   minDate:onlyDate,
+		   minTime:startTime_final
+		 });	 
+	} else if(startDate != "") {
+
+		$('#txt_enddatetime').datetimepicker({
+		   formatDate:'d/m/Y',
+		   minDate:startDate,
+		   minTime:'00:00'
+		 });	
+	}
+
+}});
+// ends here
+
+  $('#meeting_action_items_attributes_0_date').datepicker({format:'d/m/Y',minDate: 0,onSelectDate:function(){
+
+}});
+$('.jqte-test').jqte();
+$('#meeting_attendees').attr("name", "meeting[attendees][]")
+
+
+var flashcontent_check = $('[id*="flash_"]').html();
+if(flashcontent_check != '')
+{
+setTimeout(function() {
+			    $('[id*="flash_"]').fadeOut('slow');
+			}, 5000);
+}
+
+});
+</script>

@@ -1,0 +1,104 @@
+<%= labelled_fields_for :issue, @issue do |f| %>
+
+<div class="splitcontent">
+<div class="splitcontentleft">
+<% if @issue.safe_attribute?('status_id') && @allowed_statuses.present? %>
+<p><%= f.select :status_id, (@allowed_statuses.collect {|p| [p.name, p.id]}), {:required => true} %></p>
+
+<% else %>
+<p><label><%= l(:field_status) %></label> <%= h(@issue.status.name) %></p>
+<% end %>
+
+<% if @issue.safe_attribute? 'priority_id' %>
+<p><%= f.select :priority_id, (@priorities.collect {|p| [p.name, p.id]}), {:required => true}, :disabled => !@issue.leaf? %></p>
+<% end %>
+
+<% if @issue.safe_attribute? 'assigned_to_id' %>
+<p><%= f.select :assigned_to_id, principals_options_for_select(@issue.assignable_users, @issue.assigned_to), :include_blank => true, :required => @issue.required_attribute?('assigned_to_id') %></p>
+<% end %>
+
+<% if @issue.safe_attribute?('fixed_version_id') && @issue.assignable_versions.any? %>
+<p><%= f.select :fixed_version_id, version_options_for_select(@issue.assignable_versions, @issue.fixed_version), :include_blank => true, :required => @issue.required_attribute?('fixed_version_id') %>
+<%= link_to(image_tag('add.png', :style => 'vertical-align: middle;'),
+            new_project_version_path(@issue.project),
+            :remote => true,
+            :method => 'get',
+            :title => l(:label_version_new),
+            :tabindex => 200) if User.current.allowed_to?(:manage_versions, @issue.project) %>
+</p>
+<% end %>
+</div>
+
+<div class="splitcontentright">
+
+<% if User.current.allowed_to?(:log_time, @project) %>
+    <%= labelled_fields_for :time_entry, @time_entry do |time_entry| %>
+        
+        <p><%= f.text_field :estimated_hours, :size => 3, :disabled => !@issue.leaf?, :required => true %> <%= l(:field_hours) %> </p>
+        
+       
+        <!-- <p><%#= time_entry.select :activity_id, activity_collection_for_select_options %></p> -->
+        
+        <% @time_entry.custom_field_values.each do |value| %>
+          <p><%= custom_field_tag_with_label :time_entry, value %></p>
+        <% end %>
+    <% end %>
+<% end %>
+
+</div>
+</div>
+
+<% if @issue.safe_attribute? 'custom_field_values' %>
+<%= render :partial => 'issues/form_custom_fields' %>
+<% end %>
+
+Notes: <br/><textarea class="wiki-edit" cols="60" id="issue_notes" name="issue[notes]" rows="10" resize="none"></textarea>
+
+<% end %>
+
+<% include_calendar_headers_tags %>
+<script type="text/javascript">
+  jQuery(document).ready(function($) {
+     $('#issue_estimated_hours').keydown(function(e) {     
+        // Ensure that it is a number and stop the keypress
+        if(e.keyCode !=8) { //check if not backspace
+          if(this.value.length > 3)
+            return false;
+          if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+              if(e.keyCode == 190 || e.keyCode == 110) {
+              } else {
+                e.preventDefault();
+              }
+          }
+        }
+        
+     });
+    var estimated_hours = "<%=@issue.estimated_hours%>";  
+    // if(estimated_hours!="")
+    // {
+    //   var hours = estimated_hours.split('.')[0];
+    //   if(hours!=undefined)
+    //   {
+    //     $('#update #issue_estimated_hours').val(hours);
+    //     $('#all_attributes #issue_estimated_hours').val(hours);                
+    //   }
+    //   var mins = estimated_hours.split('.')[1] +"";
+    //   if(mins!=undefined)
+    //   {
+
+    //     if(mins=="05")
+    //     {
+    //       $('#update #mins').val("5");
+    //       $('#all_attributes #mins').val("5");
+    //     }
+    //     else 
+    //     {
+    //       if(mins.length==1)
+    //         mins = mins + "0";
+    //       $('#update #mins').val(mins);
+    //       $('#all_attributes #mins').val(mins);
+    //     }
+    //   }    
+    // }
+  });
+</script>

@@ -1,0 +1,210 @@
+<ul class="dashboardTabs">
+  <li class="tabActive" id="dashboardFav"><a href="javascript:;">Favorites</a></li>
+  <% unless User.current.admin? %> 
+  <li id="closedList"><a href="javascript:;">Closed List</a></li>
+  <%end%>
+</ul>
+<% unless User.current.admin? %> 
+<div class="dashboardTabsContent" >
+<div class="dashboardFavContent">
+  <h3>Closed Accounts</h3>
+  <ul>
+     <% if @closed_accounts.present? %>
+      <% for closed_account in @closed_accounts %>        
+        <li><%= link_to_project closed_account %></li>
+      <% end %>
+    <% else %>
+        <li>No Lists found!</li>
+    <% end %>
+  </ul>
+</div>
+<div class="closedListContent"> 
+    <h3>Closed Projects</h3>
+  <ul>
+    <% if @closed_projects.present? %>
+    <% for closed_project in @closed_projects %>
+      <li><%= link_to_project closed_project %></li>
+    <% end %>
+  <% else %>
+        No Lists found!
+  <% end %>
+  </ul>
+</div>
+</div>
+<%end%>
+<% fav_flag = 0 %>
+
+    <% if @favorite_projects.present? %>
+
+    <% fav_flag = 1 %>
+
+    <div id="project_updates">
+      <div class="leftInnerSeperateProject favProjects">
+
+        <% if User.current.admin? %>
+        <article class="contentLeftColumnContent adminDbrdContent">
+                    <ul>
+        <% end %>
+        
+    <% existsFlag = 0; %>
+    <% for project in @favorite_projects %>
+      <% @pro = project %>
+      <% existsFlag = 1; %>
+      <% @total_hours = TimeEntry.sum_hours(@time_entries.find_all{|entry| entry.project_id==@pro.id}.collect(&:billable))%>  
+      <% @users_by_role = @pro.users_by_role %>
+      <% issuecount = 0 %>
+      <% issuecount_total = 0 %>
+      <% @myissues = @all_issues.find_all{|issue| issue.project_id == project.id && issue.status_id != 6} %>
+      <% if @myissues.present? %>
+        <% for myissue in @myissues %>
+      <% issuecount = issuecount + myissue.done_ratio %>
+    <% issuecount_total = issuecount_total + 1 %>
+        <% end %>
+      <% end %>
+      <% if issuecount != 0 %>
+        <% issuecalc = issuecount/issuecount_total %>
+      <% else %>
+        <% issuecalc = 0 %>
+      <% end %>
+      <% @sprints = @all_sprints.find_all{|sprint| sprint.project_id==@pro.id} %>
+   
+     <% delay = 0%>
+      <% if !@sprints.empty? %>
+      <%sprint_status = []%>
+      <% for sprint in @sprints %>
+
+     <%
+      @issues_task = @all_issues.find_all{|item| item.tracker_id == 2 && item.fixed_version_id == sprint.id}
+      @issues_bugs = @all_issues.find_all{|item| item.tracker_id == 1 && item.fixed_version_id == sprint.id }
+     %>
+     
+     <%if @issues_bugs.count !=0 || @issues_task.count !=0 %>
+          <%unless sprint.effective_date.nil? %>
+            <%if Date.today > sprint.effective_date %>
+               <% sprint.status == "closed" ? delay =0 : delay = 1%>
+              <% sprint_status << delay%>
+            <% end %>
+          <% end %>
+      <% end %>
+     <% end %>
+     <% sprint_status.include?(1) ? delay =1 : delay =0 %>
+     <%sprint_status = []%>
+     <% end %>
+     
+    <% unless User.current.admin? %> 
+
+      <article class="contentLeftColumn leftsmlInnerContainer">
+          <article class="contentLeftColumnContent">
+
+            <%= link_to(image_tag('favbright.png'), remove_favorite_project_path(project.id), :title => "Remove favorite", :class => 'unfav_project') %>
+
+
+            <h1><%= link_to_project project %></h1>
+            <div class="projectDescriptionpara">
+              
+               <% if project.short_description !=""%> 
+                
+                  <%= textilizable project.short_description[0,50].gsub(/\s\w+$/,'...'), :project => project %>
+                
+              <%else%>
+                
+                <p>Project description is not available</p>
+                
+              <% end%>
+              </div>
+            <%if delay == 1%>
+            <div class="ProjectStatueContainer statusRed">  
+            <%else%>        
+            <div class="ProjectStatueContainer"> 
+            <%end%> 
+            
+            <article class="progressStatusWrap">
+            
+            <div class="progressStatus" id="progressStatus_fav_<%= project.id%>"></div>
+            <h6>Project Progress</h6>
+            </article>
+        
+        
+            <article class="projectDetailsWrap">
+            <label class="projectLeadBy" title="Project Type"><%= project.project_type ? project.project_type : "NA" %></label>
+            <label class="projectTime" title="Time Spent"> <%= TimeEntry.calculate_time(l_hours(@total_hours)) %></label>
+            <label class="totalSprint" title="Number Of Sprints"><%= @sprints.size %></label>
+            </article>
+            </div>
+
+          </article>
+        </article>
+        <script type="text/javascript">
+          ( function( $ ){
+              $( '#progressStatus_fav_<%= project.id%>' ).progressCircle();
+              $( '#progressStatus_fav_<%= project.id%>' ).progressCircle({
+                nPercent        : <%= issuecalc %>,
+                showPercentText : true,
+                thickness       : 8,
+                circleSize      : 54
+              });
+          })( jQuery );
+
+        </script>
+
+    <%else%>
+      <%if delay == 1%>
+        <li class="statusRed">
+      <% else %>
+        <li>
+      <% end %>
+          <label>
+
+            <%= link_to(image_tag('favbright.png'), remove_favorite_project_path(project.id), :title => "Remove favorite", :class => 'unfav_project') %>
+
+            <%= link_to_project project %></label>
+            <div>
+                <span title="Project Progress"><%= issuecalc %>%</span>
+
+                <span title="Time Spent - <%= TimeEntry.calculate_time(l_hours(@total_hours)) %>">
+                                
+                                <%=h truncate(TimeEntry.calculate_time(l_hours(@total_hours)), :length => 6) %>
+
+                                </span>
+                                
+                <span title="Number Of Sprints"><%= @sprints.size %></span>
+                <span title="Estimated Hours"><%= project.estimated_hours.nil? ? "0.00" :  project.estimated_hours  %></span>
+                <span title="Project Type"><%= project.project_type.nil? ? "N/A" : project.project_type %></span>
+            </div>
+        </li>  
+
+    <% end%>  
+    <% end %>
+    <% if  @favorite_projects.size==0%>
+      <p class="noSubProject">No sub projects available</p>
+    <% end %>
+    
+        </div>
+      </div>
+      <% end %>
+
+      <div class="projects"></div>
+    <% if fav_flag==0 %>
+      <div id="no_fav_projects">No favorites right now</div>
+      <br>
+    <% end %>
+    <script type="text/javascript">
+      $( document ).ready(function() {
+        $(".dashboardTabsContent").hide();
+        $( "#closedList" ).click(function() {
+          $( "#dashboardFav" ).removeClass("tabActive");
+          $( "#closedList" ).addClass("tabActive")
+          $(".dashboardTabsContent").show();
+          $(".favProjects").hide();
+          $("#no_fav_projects").hide();
+        });
+        $( "#dashboardFav" ).click(function() {
+          $( "#closedList" ).removeClass("tabActive")
+          $( "#dashboardFav" ).addClass("tabActive");
+          $(".dashboardTabsContent").hide();
+          $(".favProjects").show();
+          $("#no_fav_projects").show();
+        });
+
+      });
+    </script>

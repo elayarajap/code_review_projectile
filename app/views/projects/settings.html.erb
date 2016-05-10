@@ -1,0 +1,70 @@
+<h2 class="title"><%=l(:label_settings)%></h2>
+
+<%= render_tabs project_settings_tabs %>
+
+<% html_title(l(:label_settings)) -%>
+
+<%= render :partial => 'projects/add_sprint_close_project' %>
+<%# content_for :sidebar do %>
+<%#= render :partial => 'layouts/projects_sidebar' %>
+<%# end %>  
+<script>
+	$('.splitcontentright input[name="membership[role_ids][]"]').each(function(){
+		 $(this).attr("disabled", true);
+		 $(this).removeAttr("checked");
+	});
+  $("#main-menu ul li a").removeClass("selected");
+  $(".settings").addClass("selected");
+  
+  function checkClient(obj,val) {
+  	if($(obj).is(':checked')) {
+	  	$.ajax({
+	      type: 'GET',
+	      url: '<%= users_check_role_path%>?id='+val,
+	      success: function(response){
+	      	if(response == "true") {
+	      		var res = confirm("Are you sure want to add client?")
+	      		if(res) {
+	      			$('input[name="membership[user_ids][]"]').attr("disabled", true);
+	      			$('input[name="membership[user_ids][]"]').removeAttr("checked");
+	      			$(obj).attr ("checked" ,"checked" );
+	      			$(obj).attr("disabled", false)
+		      		$('.splitcontentright input[name="membership[role_ids][]"]').each(function(){ 
+					    var v = $(this).val();
+					    if(v==6){
+					    	$(this).attr ("checked" ,"checked" );
+					    	$(this).attr("disabled", false);
+					    } else {
+					    	$(this).attr("disabled", true);
+					    	$(this).removeAttr("checked");
+					    }
+					}); 
+	      		} else {
+	      			$(obj).removeAttr("checked");
+	      		}
+			   
+	      	} else {
+	      		$('.splitcontentright input[name="membership[role_ids][]"]').each(function(){
+				    	$(this).attr("disabled", false);
+				    	$(this).removeAttr("checked");
+				}); 
+	      	}
+	      }
+	    });
+  	} else {
+  		if($('[name="membership[user_ids][]"]:checked').length < 1) {
+  			$('.splitcontentright input[name="membership[role_ids][]"]').each(function(){
+				 $(this).attr("disabled", true);
+				 $(this).removeAttr("checked");
+			});
+  		}else {
+	  		$('.splitcontentright input[name="membership[user_ids][]"]').attr("disabled", false)
+	  		$('input[name="membership[role_ids][]"]').each(function(){
+			    	$(this).attr("disabled", false);
+			    	$(this).removeAttr("checked");
+			});
+		}
+  	}
+  }
+
+</script>

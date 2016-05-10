@@ -1,0 +1,62 @@
+<h2 class="title"><%=l(:label_attachment_new)%></h2>
+
+<%= error_messages_for 'attachment' %>
+<%= form_tag(project_files_path(@project), :multipart => true, :class => "tabular fileupload") do %>
+
+
+<% if !@directories.empty? %>
+
+<div class="box">
+
+<p>
+	<label>Directory</label>
+<%= select("","directory_id", @directories.collect {|p| [ p.name, p.id ] }) %>
+</p>
+
+<p class="attachFilesDiv">
+	<label><%=l(:label_attachment_plural)%></label>
+	<span class="attachFileSpan">
+		<%= render :partial => 'attachments/form' %>
+	</span>
+</p>
+<input class="greenBtn file_form_button" name="commit" type="button" value="Add">
+
+<% elsif User.current.allowed_to?(:manage_files, @project) %>
+
+<div><%= link_to("Your directory store is empty!. Click here to create a new directory in order to upload and categorize your files in any of your directories", new_project_directory_path(@project), :class => 'addNewDirectoryIcon ') if User.current.allowed_to?(:manage_files, @project) %></div>
+
+<% else %>
+
+<div>Directories are yet to be created! Files can be uploaded only if directories are added.</div>
+
+</div>
+
+<% end %>
+
+
+<% end %>
+
+<%# content_for :sidebar do %>
+
+<%#= render :partial => 'layouts/projects_sidebar' %>
+
+<%# end %>
+
+
+<script>
+$(document).ready(function(){
+	$('.file_form_button').click(function(e){
+		if($('#attachments_fields span[id^=attachments_]').length!=0)
+		{
+			$('form.fileupload').submit();
+		}
+		else
+		{
+			//alert('Oops, file required...');
+			$('form.fileupload').submit();
+			//return false;
+			
+		}
+	});
+});
+</script>

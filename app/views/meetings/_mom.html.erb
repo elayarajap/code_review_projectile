@@ -1,0 +1,61 @@
+Hi <%= @client_names%>,      <br><br>
+
+Thanks for your valuable time on the call. Please find below the summary for the meeting held on <%= @meeting_start_date %>.<br/><br/>
+<%# if !@meeting.nil? %>
+<table class="formTable additional" style="border: 1px solid #ebebec;width:100%;">
+
+	<tr style="background: #f8f7f7;"> 
+		<td class="textAlignLeft" colspan="2" style="text-align:center;padding-left:8px;"><h3><%= @meeting_title %> </h3></td>
+	</tr>
+	 <tr style="background: #ebebec;"> 
+		<td  class="textAlignLeft" style="padding-left:8px;"><b>Start DateTime:</b> <%= @meeting_start_date %> <%= @meeting_start_time %></td>
+		<td class="textAlignLeft" style="padding-left:8px;"><b>End DateTime:</b> <%= @meeting_end_date %> <%= @meeting_end_time %></td>
+	</tr>
+</table><br/>
+<h3 class="subTitleHeader">Discussion Summary:</h3>
+<table class="formTable additional" style="border: 1px solid #ebebec;width:100%;">
+	<tr style="background: #f8f7f7;"> 
+		<td class="textAlignLeft discussionPoint" colspan="2" style="padding-left:8px;">
+			<%= @meeting_discussion_summary.gsub(/\n/, '<br/>').html_safe %> </td>
+	</tr>
+</table><br/>
+
+ <h3 class="subTitleHeader">Attendees:</h3>
+    <% name_array = [] %>
+    <% unless @meeting_attendees.nil? %>
+    	<% @meeting_attendees.each do |attendees| %>
+	    	<% name_array << attendees %>
+    	<%end%>
+    <%end%>
+    <% unless @meeting_custom_attendees.nil? %>
+    <% @meeting_custom_attendees.each do |attendees| %>
+	   <% name_array << attendees.name %>
+    <%end%>
+    <%end%>
+    <%= name_array.join ', 	' %>
+	 <br />
+	  <br />	
+    <br />
+
+    
+    <h3 class="subTitleHeader">Action Items:</h3>
+    <table class="formTable" style="border: 1px solid #ebebec;width:100%;">  
+      <tr style="background: #ebebec;text-align:left;">  
+        <th width="30%" style="padding-left:8px;">Name</th>
+        <th width="30%" style="padding-left:8px;">Sprint</th>
+        <th width="20%" style="padding-left:8px;">Owner</th>
+        <th width="20%" style="padding-left:8px;"> Target Date</th>
+      </tr> 
+      <% unless @meeting_action_items.nil? %>
+       <% @meeting_action_items.each do |action_item| %>
+      <tr style="background: #f8f7f7;">  
+        <td style="padding-left:8px;"><%= action_item.item unless action_item.item.nil? %></td>  
+        <td style="padding-left:8px;"><%= Version.find(action_item.fixed_version_id).name unless action_item.fixed_version_id.nil? %></td>
+        <td style="padding-left:8px;"><%= User.find(action_item.user_id).name unless action_item.user_id.nil?%></td>
+        <td style="padding-left:8px;"> <%= action_item.date unless action_item.date.nil? %></td>
+      </tr>  
+      <%end%>
+      <%end%>
+    </table>
+<%# end %>
+

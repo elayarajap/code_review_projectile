@@ -1,0 +1,143 @@
+<div id = 'divInitiationForm'>
+<%= labelled_form_for @project, remote: true do |f| %>
+<%= error_messages_for 'project' %>
+<div class="splitContentDiv mediumLabelWidth">
+  <div class="box tabular">
+  <!--[form:project]-->
+    
+    <%= wikitoolbar_for 'project_description' %>
+
+    <% @project.custom_field_values.each do |value| %>
+      <p><%= custom_field_tag_with_label :project, value %></p>
+    <% end %>
+    <%= call_hook(:view_projects_form, :project => @project, :form => f) %>
+  </div>
+</div>
+<% if @project.new_record? %>
+  <div class="splitContentDiv mediumLabelWidth">
+    <div class="box tabular">
+      <h3 class="subTitleHeader"><%= l(:label_module_plural) %></h3>
+    <% Redmine::AccessControl.available_project_modules.each do |m| %>
+        <label class="floating">
+        <%= check_box_tag 'project[enabled_module_names][]', m, @project.module_enabled?(m), :id => "project_enabled_module_names_#{m}" %>
+        <%= l_or_humanize(m, :prefix => "project_module_") %>
+        </label>
+    <% end %>
+    <%= hidden_field_tag 'project[enabled_module_names][]', '' %>     
+    <%= javascript_tag 'observeProjectModules()' %>
+    </div>
+  </div>
+<% end %>
+
+<% if @project_client_flag!=0 %>
+
+<%= submit_tag l(:button_save),:class=>'greenBtn',:style=>"margin:0px 2px -21px 0px;"%>
+
+<% end %>
+<!--[eoform:project]-->
+
+<% unless @project.identifier_frozen? %>
+  <% content_for :header_tags do %>
+    <%= javascript_include_tag 'project_identifier' %>
+  <% end %>
+<% end %>
+
+<% if !User.current.admin? && @project.inherit_members? && @project.parent && User.current.member_of?(@project.parent) %>
+  <%= javascript_tag do %>
+    $(document).ready(function() {
+      $("#project_inherit_members").change(function(){
+        if (!$(this).is(':checked')) {
+          if (!confirm("<%= escape_javascript(l(:text_own_membership_delete_confirmation)) %>")) {
+            $("#project_inherit_members").attr("checked", true);
+          }
+        }
+      });
+    });
+  <% end %>
+<% end %>
+
+
+
+<%end%>
+</div>
+
+<div id = 'divInitiationTemplate' style='display:none' >
+	<%= render :partial => 'preview', :locals => { :initiation_details => @initiation_details } %>
+</div>
+
+<div style='float:right;' id="send_mail">
+<%= link_to "Send Mail",  initiation_mail_project_path(@project),:class=>'blueBtn inlineBlock' %>
+</div>
+<div style='float:right;margin:0px 2px 0px 10px;'>
+<input id='btnPreview' type='button' class='blueBtn inlineBlock' value="Preview" onclick='fnToggleTemplate()'/>
+</div>
+<script>
+$(document).ready(function() {
+
+  $(".overview").removeClass('selected');
+  $(".link_initiation").addClass('selected');
+  
+//$("#project_parent_id").val("<%=params[:project_id]%>");
+//$("#project_parent_id").attr("disabled",true)
+$(".bool_cf").parent().remove();
+$('.hasDatepicker').datepicker( "option", "minDate", null);
+$('.hasDatepicker').datepicker( "option", "maxDate", null);
+
+<%if !is_mail_sent.present?%>
+  $('#send_mail').hide();
+<%end%>
+
+<%if is_mail_sent.present? && is_mail_sent.try(:value).present? && is_mail_sent.try(:value)%>
+  $("#btnPreview").trigger("click");
+  $("#btnPreview").hide();
+  $(".blueBtn").hide();
+<%end%>
+
+$('#project_custom_field_values_30').change(function()
+  { 
+      if($(this).val()!='')
+      {
+      var min_date = $('#project_custom_field_values_30').val();
+      $('#project_custom_field_values_32').datepicker("option","maxDate",min_date);
+      }
+  });
+
+
+$.datepicker._gotoToday = function(id) {
+    var target = $(id);
+    var inst = this._getInst(target[0]);
+    if (this._get(inst, 'gotoCurrent') && inst.currentDay) {
+            inst.selectedDay = inst.currentDay;
+            inst.drawMonth = inst.selectedMonth = inst.currentMonth;
+            inst.drawYear = inst.selectedYear = inst.currentYear;
+    }
+    else {
+            var date = new Date();
+            inst.selectedDay = date.getDate();
+            inst.drawMonth = inst.selectedMonth = date.getMonth();
+            inst.drawYear = inst.selectedYear = date.getFullYear();
+            // the below two lines are new
+            this._setDateDatepicker(target, date);
+            this._selectDate(id, this._getDateDatepicker(target));
+    }
+    this._notifyChange(inst);
+    this._adjustDate(target);
+}
+
+//$(".hasDatepicker").blur(function(e) { $(this).datepicker("hide"); });
+
+
+});
+function fnToggleTemplate()
+{
+	$('#divInitiationForm').toggle();
+	$('#divInitiationTemplate').toggle();
+	if($('#btnPreview').val()=="Preview")
+		$('#btnPreview').val("Close Preview")
+	else
+		$('#btnPreview').val("Preview")
+
+}
+</script>
+
+

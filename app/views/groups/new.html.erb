@@ -1,0 +1,9 @@
+<h2 class="title"><%= link_to l(:label_group_plural), groups_path %> &#187; <%= l(:label_group_new) %></h2>
+
+<%= labelled_form_for @group do |f| %>
+<%= render :partial => 'form', :locals => { :f => f } %>
+<p>
+  <%= f.submit l(:button_create),:class=>'greenBtn' %>
+  <%= f.submit l(:button_create_and_continue), :name => 'continue',:class=>'blueBtn' %>
+</p>
+<% end %>

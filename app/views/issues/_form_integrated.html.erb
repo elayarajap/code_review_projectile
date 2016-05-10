@@ -1,0 +1,100 @@
+
+<%= labelled_fields_for :issue, @issue do |f| %>
+<%= call_hook(:view_issues_form_details_top, { :issue => @issue, :form => f }) %>
+
+<% if @project.active? %>
+
+<div class="oneColumn">
+    
+<% if @issue.safe_attribute? 'project_id' %>
+<p class="selectBoxP"><%= f.select :project_id, project_tree_options_for_select(@issue.allowed_target_projects, :selected => @issue.project), {:required => true},
+                :onchange => "updateIssueFrom('#{escape_javascript project_issue_form_path(@project, :id => @issue, :format => 'js')}')" %></p>
+<% end %>
+
+<div style="display:none;">
+<% if @issue.safe_attribute? 'priority_id' %>
+<p><%= f.select :priority_id, (@priorities.collect {|p| [p.name, p.id]}), {:required => true}, :disabled => !@issue.leaf? %></p>
+<% end %>
+
+<% if @issue.safe_attribute? 'assigned_to_id' %>
+<p><%= f.select :assigned_to_id, principals_options_for_select(@issue.assignable_users, @issue.assigned_to), :include_blank => true, :required => @issue.required_attribute?('assigned_to_id') %></p>
+<% end %>
+</div>
+
+<% if @issue.safe_attribute?('fixed_version_id') && @issue.assignable_versions_updated.any? %>
+<p><%= f.select :fixed_version_id, version_options_for_select(@issue.assignable_versions_updated, @issue.fixed_version), :include_blank => true, :required => @issue.required_attribute?('fixed_version_id') %>
+</p>
+<% end %>
+
+<% if @issue.safe_attribute? 'subject' %>
+<p><%= f.text_field :subject, :class => "addToInput", :size => 80, :maxlength => 255, :required => true %>
+  <% if params["tid"]=="2" || params["tracker_id"]=="2" %>
+     <%= f.text_field :estimated_hours, :size => 1,:placeholder=>"Estimated hours" %> 
+<%end%>
+  
+
+
+ <% if @issue.safe_attribute?('description') && (params[:tid] == "1" || params["tracker_id"]=="1") %>
+  <p>
+    <%= f.label_for_field :description, :required => @issue.required_attribute?('description') %>
+    <%= link_to_function image_tag('edit.png'), '$(this).hide(); $("#issue_description_and_toolbar").show()' unless @issue.new_record? %>
+    <%= content_tag 'span', :id => "issue_description_and_toolbar", :style => (@issue.new_record? ? nil : 'display:none') do %>
+      <%= f.text_area :description,
+                     :cols => 60,
+                     :rows => (@issue.description.blank? ? 10 : [[10, @issue.description.length / 50].max, 100].min),
+                     :accesskey => accesskey(:edit),
+                     :class => 'wiki-edit',
+                     :no_label => true %>
+    <% end %>
+  </p>
+  <%= wikitoolbar_for 'issue_description' %>
+<% end %>
+   
+
+  <% if params[:tid] == "1" || params["tracker_id"]=="1" %>
+    <p id="attachments_form">
+      <label><%= l(:label_attachment_plural) %></label>
+      <%= render :partial => 'attachments/form', :locals => {:container => @issue} %> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    </p>
+  <% end %>
+
+  <% if params["tid"]=="2" || params["tracker_id"]=="2" %>
+    <% if @issue.safe_attribute?('fixed_version_id') && @issue.assignable_versions_updated.any? %>
+      <%= submit_tag "Add Task", :class => "greenBtn" %>
+    <%else%>
+      <button type="submit" onclick="return false;" name="button" class="greenBtn grayBtn" disabled="disabled">Add Task</button>
+    <%end%>
+  <% elsif params["tid"]=="1" || params["tracker_id"]=="1" %>
+    <% if @issue.safe_attribute?('fixed_version_id') && @issue.assignable_versions_updated.any? %>
+      <%= submit_tag "Post Bug", :class => "greenBtn new_issue_btn " %>
+    <%else%>
+      <button type="submit" onclick="return false;" name="button" class="greenBtn grayBtn" disabled="disabled">Post Bug</button>
+    <%end%>
+  <% end %>
+
+
+<% if @issue.safe_attribute? 'tracker_id' %>
+ 
+  <% if params[:tid] == "1" || params["tracker_id"]=="1" %>
+     <%= javascript_tag do %>
+      updateIssueFrom('<%= escape_javascript project_issue_form_path(@project, :id => @issue, :format => 'js', :tracker_id => params[:tid]) %>') 
+  <% end%>
+  
+<% end%>
+
+<%= hidden_field_tag 'tracker_id', params["tid"] %>
+
+<% end %>
+
+
+<% end %>
+
+</div>
+
+<% end %>
+
+
+<%= call_hook(:view_issues_form_details_bottom, { :issue => @issue, :form => f }) %>
+<% end %>
+
+

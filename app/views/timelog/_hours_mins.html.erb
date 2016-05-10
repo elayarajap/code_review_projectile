@@ -1,0 +1,3 @@
+<%= f.select type=='issue' ? :estimated_hours : :hours, options_for_select((0..8).to_a.map{|s| ["#{s}", s]}), :size => 5, :required => true, :class => 'formboxitem' %>
+
+<%= select("",:mins, options_for_select(hours_for_timesheet, selected: minutes_append_zero(@time_entry.hours)), :class => 'formboxitem') %> &nbsp; Mins

@@ -1,0 +1,18 @@
+<h2 class="title"><%=h "#{@issue.tracker.name} ##{@issue.id}" %></h2>
+
+<%= render :partial => 'edit' %>
+<% content_for :header_tags do %>
+    <%= robot_exclusion_tag %>
+<% end %>
+
+<script type="text/javascript">
+  jQuery(document).ready(function($) {
+
+<%if issue_heading(@issue).include?("Bug") %>
+  $('.bugs').addClass('selected');
+    <%else%>
+  $('.todo').addClass('selected');
+    <%end%>
+
+    });
+</script>

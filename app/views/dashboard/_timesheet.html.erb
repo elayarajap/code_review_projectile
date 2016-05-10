@@ -1,0 +1,37 @@
+<% for project in @projects %>
+  <%@pro = project 
+  @projects_sub_side = @all_sub_projects.find_all{|sub_proj| sub_proj.parent_id==project.id} %>
+  <%if @projects_sub_side.size==0%>    
+      <% @total_hours = TimeEntry.sum_hours(@time_entries.find_all{|entry| entry.project_id==project.id}.collect(&:billable))%>
+  <%else%>
+  <% @total_hours = TimeEntry.sum_hours(@time_entries.find_all{|entry| @projects_sub_side.collect(&:id).include?  entry.project_id}.collect(&:billable))%>
+      <% #@total_hours = TimeEntry.sum_hours(@time_entries.where("project_id in (?)",@projects_sub_side.collect(&:id)).collect(&:billable))%>
+  <%end%>
+
+  <tr class="rightSideProjectTitle">
+    <td width="75%" class="textAlignLeft">
+
+      <%= link_to(project.name, report_project_time_entries_path(project)) %>
+
+    </td>
+    <td class="textAlignLeft" title="Total Hours - <%= @total_hours %>">
+
+    <% @total_hours_str = "#{@total_hours}" %>       
+    <%=h truncate(@total_hours_str, :length => 6) %>
+
+    </td>
+  </tr>
+
+  <% for projects_sub_side_values in @projects_sub_side %>
+    <% @projects_sub_side_values = projects_sub_side_values %> 
+    <% @total_hours_side = TimeEntry.sum_hours(@time_entries.find_all{|entry| entry.project_id==projects_sub_side_values.id}.collect(&:billable))%>
+    <tr>
+      <td width="75%" class="textAlignLeft"><%= link_to_project projects_sub_side_values %></td>
+      <td class="textAlignLeft">          
+        <%= @total_hours_side %>
+      </td>
+    </tr>
+  <% end %>
+  
+<% end %>
+    

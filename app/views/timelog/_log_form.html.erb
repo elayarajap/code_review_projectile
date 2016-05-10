@@ -1,0 +1,103 @@
+<%= error_messages_for 'time_entry' %>
+<%= back_url_hidden_field_tag %>
+<div id="logTimeDiv">
+		<p class="formboxitem">
+			<%= f.text_field :spent_on, :readonly => true, :size => 10, :required => true, :id=> "time_entry_spent_on_pop", :class=> "date_picker formboxitem" %>
+		</p>
+
+    <% if find_project_managers(@project).map(&:user_id).include?(User.current.id) %>
+  <p><%= f.select :user, @project.members.collect {|p| [ p.name, p.user_id ] } %></p>
+  <% end %>
+
+		<p class="hoursAndMinutPopUp">
+			<%= calendar_for('time_entry_spent_on_pop') %>
+			<%= render :partial => "hours_mins_project", :locals => {:f => f, :type=>"timelog"} %>
+		</p>
+
+    <p class="formboxitem">
+      <label>Hours Type</label>
+    <%= select("",:hours_type, options_for_select(hours_type), :class => 'formboxitem') %> &nbsp;
+    </p>
+
+		<p class="formboxitem">
+			<%= f.text_area :comments, :size => 100, :maxlength => 255, :required => true, :class => "formboxitem" %>
+		</p>
+		<p class="formboxitem">
+			<%= f.select :activity_id, activity_collection_for_select_options(@time_entry), :required => true, :class => "formboxitem" %>
+			
+			<%= call_hook(:view_timelog_edit_form_bottom, { :time_entry => @time_entry, :form => f }) %>
+		</p>
+		 <%= f.hidden_field :form_type, :value => "partial_form" %>
+		<p class="formboxitem"><%= button_tag l(:button_create),:class=>'greenBtn logTimeSubmit partial_form', :onclick=>"fnSubmitLogTime();" %></p>
+</div>
+<%= javascript_tag do %>
+  observeAutocompleteField('time_entry_issue_id', '<%= escape_javascript auto_complete_issues_path(:project_id => @project, :scope => (@project ? nil : 'all'))%>', {
+    select: function(event, ui) {
+      $('#time_entry_issue').text(ui.item.label);  
+    }
+  }); 
+<% end %>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+      <%if is_locked_or_closed_or_opened(params[:fixed_version_id])%>
+        $('.logTimeSubmit').attr('disabled', true);
+        $('.logTimeSubmit').addClass('grayBtn');
+      <%end%>
+
+      //$(".hasDatepicker").blur(function(e) { $(this).datepicker("hide"); });
+      
+    });
+//  jQuery(document).ready(function($) {
+    //$('.partial_form').live( "click", 
+      function fnSubmitLogTime() {    
+    //form.preventDefault();        
+      $('.logTimeSubmit').attr('disabled', true);
+      $('.logTimeSubmit').addClass('grayBtn');
+      $('#flash_error').hide();
+      $('#flash_notice').hide();
+      var arr = $(".new_time_entry").serializeArray();
+      // var hours; var mins;
+      // $.each(arr, function(i, fd) {
+      //   if(fd.name == "time_entry[hours]")  hours = parseInt(fd.value);
+      //   if(fd.name == "mins") mins = parseInt(fd.value);
+      // });
+
+      $.ajax({
+      type: $(".new_time_entry").attr('method'),
+      url: '<%= time_entries_path%>',
+      data: $(".new_time_entry").serialize(),
+      success: function(response){
+        if(response.length<55)
+        {                  	
+          	showFlashError("Hours, Comments and Activity are mandatory for Time Logging!");
+        }
+        else
+        {
+	        showFlashNotice('Successfully added!');
+	        $('#time_entry_activity_id').val("");
+	        $('#time_entry_comments').val("");
+       		$('#time_entry_hours').val("0");
+       		$('#mins').val("0");
+          $('.filterBtn').click();
+	        // time = $(".icon-time strong").text().trim().split(".");
+	        // hours +=parseInt(time[0]);
+	        // realmin = ((parseInt(time[1].split(" ")[0])+mins)%60);
+	        // hours += Math.floor((parseInt(time[1].split(" ")[0])+mins) / 60);
+	        // if(realmin<=5) realmin = "0"+realmin.toString();
+
+	        // $(".icon-time strong").text(hours.toString()+"."+realmin.toString());
+	        // $('#time_entry_comments').val('');
+	        // $('#time_entry_issue_id').val('');
+        }
+       
+       $('.logTimeSubmit').removeAttr('disabled');
+       $('.logTimeSubmit').removeClass('grayBtn');       
+      
+      }
+    });
+    return false;
+    }//);
+
+   // });
+</script>

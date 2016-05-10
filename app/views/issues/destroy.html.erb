@@ -1,0 +1,39 @@
+<h2 class="title"><%= l(:label_confirmation) %></h2>
+
+<%= form_tag({}, :method => :delete)  do %>
+<%= @issues.collect {|i| hidden_field_tag('ids[]', i.id)}.join("\n").html_safe %>
+<div class="box confirmationFormDiv">
+<%todo = params[:todo].present? ? params[:todo] : "test" %>
+<p>
+	<%if params[:tid] == "2" %>
+	<strong><%= l(:text_destroy_task_time_entries_question, :hours => number_with_precision(@hours, :precision => 2)) %></strong>
+	<%else%>
+	<strong><%= l(:text_destroy_time_entries_question, :hours => number_with_precision(@hours, :precision => 2)) %></strong>
+	<%end%>
+</p>
+<p>
+<label><%= radio_button_tag 'todo', 'destroy', todo == 'destroy' ? true : false,:onchange => "if (this.checked) { $('#reassign_to_id').val('');}" %> <%= l(:text_destroy_time_entries) %></label>
+</p>
+<p>
+<%if @unapproved_hours > 0 %>
+<label><%= radio_button_tag 'todo', 'nullify', todo == 'nullify' ? true : false, :onchange => "if (this.checked) { $('#reassign_to_id').val(''); alert('Some reported hours in the project are still unapproved. Unapproved hours are not considered while assigning.') }" %> <%= l(:text_assign_time_entries_to_project) %></label>
+</p>
+<% else %>
+<label><%= radio_button_tag 'todo', 'nullify', todo == 'nullify' ? true : false, :onchange => "if (this.checked) { $('#reassign_to_id').val('');}" %> <%= l(:text_assign_time_entries_to_project) %></label>
+</p>
+<% end %>
+<p>
+	
+<%if params[:tid] == "2" %>
+<label><%= radio_button_tag 'todo', 'reassign', todo == 'reassign' ? true : false, :onchange => 'if (this.checked) { $("#reassign_to_id").focus(); }' %> <%= l(:text_reassign_task_time_entries) %></label>
+<%else%>
+<label><%= radio_button_tag 'todo', 'reassign', todo == 'reassign' ? true : false, :onchange => 'if (this.checked) { $("#reassign_to_id").focus(); }' %> <%= l(:text_reassign_time_entries) %></label>
+<%end%>
+<%= text_field_tag 'reassign_to_id', params[:reassign_to_id], :size => 6, :onfocus => '$("#todo_reassign").attr("checked", true);' %>
+</p>
+</div>
+<%= hidden_field_tag 'tid', params[:tid] %>
+<%= submit_tag l(:button_apply),:class=>'blueBtn' %>
+<% end %>
+
+

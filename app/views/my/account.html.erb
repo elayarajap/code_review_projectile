@@ -1,0 +1,56 @@
+<div class="contextual">
+<%= link_to(l(:button_change_password), {:action => 'password'}, :class => 'icon icon-passwd') if @user.change_password_allowed? %>
+<%= call_hook(:view_my_account_contextual, :user => @user)%>
+</div>
+
+<h2 class="title"><%=l(:label_my_account)%></h2>
+<%= error_messages_for 'user' %>
+
+<%= labelled_form_for :user, @user,
+                     :url => { :action => "account" },
+                     :html => { :id => 'my_account_form',
+                                :method => :post } do |f| %>
+<div class="splitcontentleft">
+<div class="box tabular splitContentDiv">
+  <h3 class="subTitleHeader"><%=l(:label_information_plural)%></h3>
+  <p><%= f.text_field :firstname, :required => true %></p>
+  <p><%= f.text_field :lastname, :required => true %></p>
+  <p><%= f.text_field :mail, :required => true %></p>
+  <p><%= f.select :language, lang_options_for_select %></p>
+  <% if Setting.openid? %>
+  <p><%= f.text_field :identity_url  %></p>
+  <% end %>
+
+  <% @user.custom_field_values.select(&:editable?).each do |value| %>
+    <p><%= custom_field_tag_with_label :user, value %></p>
+  <% end %>
+  <%= call_hook(:view_my_account, :user => @user, :form => f) %>
+</div>
+
+<%= submit_tag l(:button_save),:class=>'greenBtn' %>
+</div>
+
+<div class="splitcontentright">
+<div class="box splitContentDiv">
+  <h3 class="subTitleHeader"><%=l(:field_mail_notification)%></h3>
+  <%= render :partial => 'users/mail_notifications' %>
+</div>
+
+<div class="box tabular splitContentDiv">
+   <h3 class="subTitleHeader"><%=l(:label_preferences)%></h3>
+  <%= render :partial => 'users/preferences' %>
+</div>
+
+</div>
+<% end %>
+
+<% content_for :sidebar do %>
+<%= render :partial => 'sidebar' %>
+<% end %>
+
+<% html_title(l(:label_my_account)) -%>
+<script>
+$(document).ready(function(){  
+  $("#link_my_account").addClass("selected");  
+});
+</script>

@@ -1,0 +1,4 @@
+<%= @project_header %>
+
+----------------------------------------------------
+<%= render :partial => 'issue_bulk', :formats => [:html], :locals => { :issues => @issues, :issue_url => @issue_url } %>
