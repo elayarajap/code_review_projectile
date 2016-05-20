@@ -1,9 +1,0 @@
-<div class='fields'>
-<%= f.text_field :item, :placeholder => 'Item' %>&nbsp;&nbsp;
-<%= f.select(:user_id, @users.collect {|c| [c.login, c.id]}, :prompt => 'Select Assignee') %>&nbsp;&nbsp;
-<%= f.select(:fixed_version_id, @sprints.collect {|p| [ p.name, p.id ] }, :include_blank => true, :prompt => 'Select Sprint') %>&nbsp;&nbsp;
-<%= f.text_field :date, :placeholder => 'Date', :date=>'test'%>&nbsp;
-<%= link_to_remove_fields ' ', f %>
-</div>
-
-
